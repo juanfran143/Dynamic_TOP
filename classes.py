@@ -56,12 +56,14 @@ class route:
 
         return edges
 
+
     def __str__(self):
         text = str(self.edges[0].start) + "-"
         for i in self.edges[:-1]:
             text += str(i.end) + "-"
         text += str(self.edges[-1].end)
         return text
+
 
 
 class BlackBox:

@@ -106,6 +106,16 @@ class solution:
 
         self.of = sum([self.routes[i].reward * simulations_test[i] for i in range(self.max_vehicles)])
 
+        real_of = 0
+        a = self.routes[0].edges
+        for i in self.routes[0].edges:
+            node = i.end
+            if np.random.uniform() < 0.5:
+                real_of += node.reward
+            else:
+                real_of += 0
+        print(real_of)
+
         #print(self.of)
         #for i in self.routes:
         #    print(i.__str__())

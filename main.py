@@ -50,9 +50,6 @@ def Qsimheuristic_approach(max_time):
 
 def deterministic_approach_real(max_time):
     nodes, capacity, vehicles = read()
-    solution2 = solution(nodes, capacity, max_vehicles = vehicles)
-    solution2.determinstic_algorithm()
-    print(solution2.routes[0], solution2.of)
     solution3 = solution(nodes, capacity, max_vehicles=vehicles)
     solution3.determinstic_algorithm_test()
     print(solution3.routes[0], solution3.of)
