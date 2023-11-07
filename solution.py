@@ -89,6 +89,29 @@ class solution:
 
         return self.routes, self.of
 
+    def determinstic_algorithm_test(self):
+        self.dummy_solution()
+        self.create_saving_list()
+        while len(self.savings) != 0:
+            self.merge_routes(self.select_saving())
+
+        self.routes.sort(key=lambda x: x.reward, reverse=True)
+
+        simulations_test = []
+        for i in range(self.max_vehicles):
+            if np.random.uniform() < 0.5:
+                simulations_test.append(1)
+            else:
+                simulations_test.append(0)
+
+        self.of = sum([self.routes[i].reward * simulations_test[i] for i in range(self.max_vehicles)])
+
+        #print(self.of)
+        #for i in self.routes:
+        #    print(i.__str__())
+
+        return self.routes, self.of
+
 
     def simheuristic_algorithm(self, simheuristico: simheuristic):
         self.dummy_solution()

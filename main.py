@@ -45,10 +45,30 @@ def Qsimheuristic_approach(max_time):
     solution1 = solution(nodes, capacity, max_vehicles = vehicles)
     short_simulations = simheuristic(10, 0.2)
     #solution1.Qsimheuristic_multi_start(max_time, 20, short_simulations)
-    solution1.Qsimheuristic_multi_start(600, 10, short_simulations)
+    solution1.Qsimheuristic_multi_start(max_time, 10, short_simulations)
+
+
+def deterministic_approach_real(max_time):
+    nodes, capacity, vehicles = read()
+    solution2 = solution(nodes, capacity, max_vehicles = vehicles)
+    solution2.determinstic_algorithm()
+    print(solution2.routes[0], solution2.of)
+    solution3 = solution(nodes, capacity, max_vehicles=vehicles)
+    solution3.determinstic_algorithm_test()
+    print(solution3.routes[0], solution3.of)
+    """
+
+    solution2.deterministic_multi_start(max_time)
+    short_simulations = simheuristic(1000, 0.5)
+    solution2.routes = [solution2.routes[0]]
+    short_simulations.simulation(solution2)
+    solution2.of = np.mean(solution2.routes[0].stochastic_of)
+    print("Deterministic in stochastic enviroment: "+ str(solution2.of))
+    """
 
 if __name__ == '__main__':
-    Qsimheuristic_approach(10)
+    deterministic_approach_real(10)
+    #Qsimheuristic_approach(10)
     print()
     print()
     #simheuristic_approach(10)
