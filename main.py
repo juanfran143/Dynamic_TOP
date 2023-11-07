@@ -63,6 +63,12 @@ def deterministic_approach_real(max_time):
     print("Deterministic in stochastic enviroment: "+ str(solution2.of))
     """
 
+def test_dynamic():
+    nodes, capacity, vehicles = read()
+    solution3 = solution(nodes, capacity, max_vehicles=vehicles)
+    solution3.test_dynamic_algo()
+
+
 if __name__ == '__main__':
     deterministic_approach_real(10)
     #Qsimheuristic_approach(10)

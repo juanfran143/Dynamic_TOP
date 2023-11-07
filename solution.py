@@ -307,3 +307,54 @@ class solution:
             self.reset()
 
 
+
+
+    def test_dynamic_algo(self):
+        self.dummy_solution()
+        self.create_saving_list()
+        while len(self.savings) != 0:
+            self.merge_routes(self.select_saving())
+
+        self.routes.sort(key=lambda x: x.reward, reverse=True)
+
+        simulations_test = []
+        for i in range(self.max_vehicles):
+            if np.random.uniform() < 0.5:
+                simulations_test.append(1)
+            else:
+                simulations_test.append(0)
+
+        self.of = sum([self.routes[i].reward * simulations_test[i] for i in range(self.max_vehicles)])
+
+        real_of = 0
+        a = self.routes[0].edges
+        for i in self.routes[0].edges:
+            node = i.end
+            if np.random.uniform() < 0.5:
+                real_of += node.reward
+            else:
+                real_of += 0
+        print(real_of)
+
+        #print(self.of)
+        #for i in self.routes:
+        #    print(i.__str__())
+
+        return self.routes, self.of
+
+
+
+    def create_saving_list_dyn(self):
+        for i in range(len(self.nodes)-2):
+            for j in range(len(self.nodes)-2):
+                if i == j:
+                    continue
+                edge_a_b = edge(self.nodes[i+1], self.nodes[j+1])
+                edge_a_end = edge(self.nodes[i + 1], self.nodes[-1])
+                edge_depot_b = edge(self.nodes[0], self.nodes[j + 1])
+                self.savings.append(saving(self.nodes[j + 1],
+                                           self.nodes[i + 1],
+                                           self.alpha * (edge_a_end.distance + edge_depot_b.distance - edge_a_b.distance) + (1 - self.alpha) * (self.nodes[i+1].reward + self.nodes[j+1].reward),
+                                           edge_a_b.distance))
+
+        self.savings.sort(key = lambda x: x.distance)

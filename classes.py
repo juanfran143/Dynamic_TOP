@@ -190,6 +190,11 @@ class ThompsomSamplingEnvironment:
 if __name__ == "__main__":
     ts = ThompsomSamplingEnvironment()
     ts.initialize_sampling_dict({"whether": [0, 1], "congestion": [0, 1, 3]})
-    ts.update_dict((0, 1),0)
-    ts.update_dict((0, 3), 1)
     ts.simulate((0, 1))
+
+    for _ in range(0,100):
+       if np.random.uniform() < 0.7:
+           ts.update_dict((0, 1), 1)
+       else:
+           ts.update_dict((0, 1), 0)
+    print((ts.dict))
