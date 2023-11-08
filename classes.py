@@ -88,31 +88,30 @@ class BlackBox:
         self.beta_3 = beta_3
         self.n = len(beta_0)
 
-    def get_value(self, node_type, open_type, weather=0, congestion=0):
-        open_type_value = sum([i * j for i, j in zip(self.beta_1, open_type)])
+    def get_value(self, node_type, battery, weather=0, congestion=0):
+        battery_value = self.beta_1[node_type] * battery
         weather_value = self.beta_2[node_type] * weather
         congestion_value = self.beta_3[node_type] * congestion
-        exponent = self.beta_0[node_type] + weather_value + open_type_value + congestion_value
+        exponent = self.beta_0[node_type] + weather_value + battery_value + congestion_value
         if exponent < -100:
             exponent = -100
 
         return 1 / (1 + math.exp(-exponent))
 
     def get_value_with_list(self, node_type, list_of_data):
-        open_type_value = sum([i * j for i, j in zip(self.beta_1, list_of_data[0:self.n - 1])])
+        battery_value = self.beta_1[node_type] * list_of_data[self.n - 2]
         weather_value = self.beta_2[node_type] * list_of_data[self.n - 1]
         congestion_value = self.beta_3[node_type] * list_of_data[self.n]
-        exponent = self.beta_0[node_type] + weather_value + open_type_value + congestion_value
+        exponent = self.beta_0[node_type] + weather_value + battery_value + congestion_value
 
         return 1 / (1 + math.exp(-exponent))
 
-    def simulate(self, node_type, open_type=0, weather=0, congestion=0, verbose=False):
+    def simulate(self, node_type, battery=0, weather=0, congestion=0, verbose=False):
         rand = random.random()
-
         if verbose:
-            print("La probabilidad de la black box ha sido: " + self.get_value(weather, open_type, congestion))
+            print("La probabilidad de la black box ha sido: " + str(self.get_value(weather, battery, congestion)))
 
-        if rand > self.get_value(node_type, open_type, weather, congestion):
+        if rand > self.get_value(node_type, battery, weather, congestion):
             if verbose:
                 print("Se pierde la capacidad del nodo")
             return 0
@@ -135,10 +134,10 @@ class BlackBox:
 
     def get_value_with_dict(self, dict_of_data):
         node_type = dict_of_data["node_type"]
-        open_type_value = sum([i * j for i, j in zip(self.beta_1, dict_of_data["open_type"])])
+        battery_value = self.beta_1[node_type] * dict_of_data["battery"]
         weather_value = self.beta_2[node_type] * dict_of_data["weather"]
         congestion_value = self.beta_3[node_type] * dict_of_data["congestion"]
-        exponent = self.beta_0[node_type] + weather_value + open_type_value + congestion_value
+        exponent = self.beta_0[node_type] + weather_value + battery_value + congestion_value
         # Negativo = bueno
         if -exponent > 100:
             exponent = -100
@@ -160,7 +159,7 @@ class BlackBox:
             print("\n")
             print("Para el tipo de nodo " + str(i) + ":")
             print("Beta_0: " + str(self.beta_0[i]) + " correspondiente al término independiente")
-            print("Beta_1: " + str(self.beta_1) + " correspondiente al término que acompaña al open_type")
+            print("Beta_1: " + str(self.beta_1) + " correspondiente al término que acompaña al battery")
             print("Beta_2: " + str(self.beta_2[i]) + " correspondiente al término que acompaña al weather")
             print("Beta_3: " + str(self.beta_3[i]) + " correspondiente al término que acompaña al congestion")
             print("\n")
@@ -174,7 +173,6 @@ class ThompsomSamplingEnvironment:
         values = list(dict_parameters.values())
         combinations = list(product(*values))
         self.dict = {combo: [0, 0] for combo in combinations}
-        print(self.dict)
 
     def update_dict(self,key, value):
         if value == 0:
@@ -185,6 +183,7 @@ class ThompsomSamplingEnvironment:
     def simulate(self, key):
         s,f = self.dict[key]
         sim = np.random.beta(s + 1, f + 1)
+        return sim
 
 
 if __name__ == "__main__":
