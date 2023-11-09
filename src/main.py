@@ -34,19 +34,39 @@ def test_dynamic():
     solution3.test_dynamic_algo()
 
 
-def run_static(nodes, capacity, vehicles, blackbox, iterations):
-    s = Static(nodes, capacity, vehicles, bb=blackbox)
+def run_static(nodes, capacity, vehicles, blackbox=None, neighbour_limit=-1, iterations=100):
+    s = Static(nodes, capacity, vehicles, bb=blackbox, neighbour_limit=neighbour_limit)
     route, static_of, dynamic_of = s.run_multi_start_static(iterations)
     print(route, static_of, dynamic_of)
 
 
-if __name__ == '__main__':
+def neighbour(nodes, percentage):
+    max = 0
+    for i in range(len(nodes) - 2):
+        for j in range(len(nodes) - 2):
+            if i == j:
+                continue
+            edge_a_b = Edge(nodes[i + 1], nodes[j + 1])
+            if edge_a_b.distance > max:
+                max = edge_a_b.distance
+
+    return max*percentage
+
+
+def initialize_instance():
     nodes, capacity, vehicles = read()
     beta0, beta1, beta2, beta3 = Betas().MEDIUM
-
     blackbox = BlackBox()
     blackbox.setter_betas(beta0, beta1, beta2, beta3)
-    run_static(nodes, capacity, vehicles, blackbox, 100)
+    percentage = 1
+    neighbour_limit = neighbour(nodes, percentage)
+    return nodes, capacity, vehicles, blackbox, neighbour_limit
+
+
+if __name__ == '__main__':
+    nodes, capacity, vehicles, blackbox, neighbour_limit = initialize_instance()
+
+    run_static(nodes, capacity, vehicles, blackbox=blackbox, neighbour_limit=neighbour_limit, iterations=100)
     # nodes, max_dist, max_vehicles=1, alpha=0.7, neighbour_limit=-1, dict_of_types=None
 
     # ts = ThompsomSamplingEnvironment()

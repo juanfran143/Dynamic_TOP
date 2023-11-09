@@ -1,3 +1,6 @@
+from src.algorithm.static_algorithm import *
+
+
 class Betas:
     LOW = [{0: 0.7, 1: 0.8, 2: 0.9, 3: 1, 4: 1.1},
               [-90000, -60000, -10000, 0, 2],
@@ -23,3 +26,9 @@ class Betas:
               [-0.8, -0.55, 0, 0.4, 0.6],
               {0: -0.3, 1: -0.2, 2: -0.15, 3: -0.1, 4: -0.05},
               {0: -2.5, 1: -2, 2: -0.5, 3: -0.25, 4: -0.1}]
+
+
+class Algorith:
+
+    TYPE_OF_ALGORITH = {"STATIC": Static.run_static}
+    SELECT_SAVING = {"GREEDY": Static.select_saving_greedy, "GRASP": Static.select_saving_grasp}

@@ -3,178 +3,51 @@ from src.utils.classes import *
 import random as rnd
 import numpy as np
 import time
+from src.algorithm.static_algorithm import *
 
 
 class Solution:
 
-    def __init__(self, nodes, max_dist, max_vehicles=1, alpha=0.7):
+    def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
+                 dict_of_types=None,
+                 max_iter_dynamic=100, max_iter_random=100):
         self.routes = []
         self.of = 0
-        #self.stochastic_of = []
-        #self.reliability = 0
+
+        self.max_iter_random = max_iter_random
+        self.seed = seed
         self.nodes = nodes
         self.savings = []
         self.alpha = alpha
         self.max_dist = max_dist
         self.max_vehicles = max_vehicles
+        self.neighbour_limit = neighbour_limit
+
+        random.seed = self.seed
+        self.weather = random.randint(0, 1)
+        self.congestion = {i: random.randint(0, 1) for i in range(len(nodes))}
+        self.bb = bb
+        self.max_iter_dynamic = max_iter_dynamic
+
+        if dict_of_types:
+            self.dict_of_types = dict_of_types
+        else:
+            self.dict_of_types = {i: 1 for i in range(len(nodes))}
 
     def reset(self):
         self.routes = []
-        self.stochastic_of = []
         self.savings = []
 
-    def dummy_solution(self):
-        for i in range(len(self.nodes)-2):
-            edges = [Edge(self.nodes[0], self.nodes[i+1]), Edge(self.nodes[i+1], self.nodes[-1])]
-            self.routes.append(Route(i, edges, sum([i.distance for i in edges])))
-            self.routes[i].reward = self.nodes[i+1].reward
-            self.nodes[i+1].route = self.routes[i]
-
-    def create_saving_list(self):
-        for i in range(len(self.nodes)-2):
-            for j in range(len(self.nodes)-2):
-                if i == j:
-                    continue
-                edge_a_b = Edge(self.nodes[i+1], self.nodes[j+1])
-                edge_a_end = Edge(self.nodes[i + 1], self.nodes[-1])
-                edge_depot_b = Edge(self.nodes[0], self.nodes[j + 1])
-                self.savings.append(Saving(self.nodes[j + 1],
-                                           self.nodes[i + 1],
-                                           self.alpha * (edge_a_end.distance + edge_depot_b.distance - edge_a_b.distance) + (1 - self.alpha) * (self.nodes[i+1].reward + self.nodes[j+1].reward),
-                                           edge_a_b.distance))
-
-        self.savings.sort(key = lambda x: x.saving)
-
-    def select_saving(self, random = 2):
-        return self.savings.pop(rnd.randint(0, min([random, len(self.savings)-1])))
-
-    def merge_routes(self, saving):
-        route_a = saving.start.route
-        route_b = saving.end.route
-        distance = route_a.distance + route_b.distance + saving.a_to_b - route_a.edges[-1].distance - route_b.edges[0].distance
-        if route_a.id != route_b.id and route_a.edges[0].end.id == saving.start.id and route_b.edges[0].end.id == saving.end.id and distance <= self.max_dist:
-
-            route_a.edges.pop()
-            route_a.edges = route_a.edges + [Edge(saving.start, saving.end)] + route_b.edges[1:]
-            route_a.distance = distance
-            route_a.reward += route_b.reward
-            for i in route_b.edges[:-1]:
-                i.end.route = route_a
-
-            self.routes.pop(self.routes.index(route_b))
+    def select_saving(self, random_selection=2):
+        raise NotImplementedError("La subclase debe implementar este método abstracto")
 
     def local_search_same_route(self):
-        """
-        En el determinista no tiene sentido, pero en el simheurístico sí.
-        :return:
-        """
-        for route in self.routes:
-            for Edge in route:
-                pass
+        raise NotImplementedError("La subclase debe implementar este método abstracto")
 
-    def determinstic_algorithm(self):
-        self.dummy_solution()
-        self.create_saving_list()
-        while len(self.savings) != 0:
-            self.merge_routes(self.select_saving())
+    def run_static(self):
+        s = Static(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
+                   self.bb, self.dict_of_types, self.max_iter_dynamic)
+        s.run_multi_start_static(self.max_iter_random)
 
-        self.routes.sort(key=lambda x: x.reward, reverse=True)
-        self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
-
-        return self.routes, self.of
-
-    def determinstic_algorithm_test(self):
-        self.dummy_solution()
-        self.create_saving_list()
-        while len(self.savings) != 0:
-            self.merge_routes(self.select_saving())
-
-        self.routes.sort(key=lambda x: x.reward, reverse=True)
-
-        simulations_test = []
-        for i in range(self.max_vehicles):
-            if np.random.uniform() < 0.5:
-                simulations_test.append(1)
-            else:
-                simulations_test.append(0)
-
-        self.of = sum([self.routes[i].reward * simulations_test[i] for i in range(self.max_vehicles)])
-
-        real_of = 0
-        a = self.routes[0].edges
-        for i in self.routes[0].edges:
-            node = i.end
-            if np.random.uniform() < 0.5:
-                real_of += node.reward
-            else:
-                real_of += 0
-        print(real_of)
-
-        #print(self.of)
-        #for i in self.routes:
-        #    print(i.__str__())
-
-        return self.routes, self.of
-
-    def deterministic_multi_start(self, max_time):
-        start = time.time()
-        best_route, best_of = self.determinstic_algorithm()
-        while time.time()-start <= max_time:
-            self.reset()
-            new_route, new_sol = self.determinstic_algorithm()
-            if best_of < new_sol:
-                best_of = new_sol
-                best_route = copy.deepcopy(new_route)
-
-        self.routes = best_route
-        print(best_of)
-        for i in self.routes:
-            print(i.__str__())
-
-    def test_dynamic_algo(self):
-        self.dummy_solution()
-        self.create_saving_list()
-        while len(self.savings) != 0:
-            self.merge_routes(self.select_saving())
-
-        self.routes.sort(key=lambda x: x.reward, reverse=True)
-
-        simulations_test = []
-        for i in range(self.max_vehicles):
-            if np.random.uniform() < 0.5:
-                simulations_test.append(1)
-            else:
-                simulations_test.append(0)
-
-        self.of = sum([self.routes[i].reward * simulations_test[i] for i in range(self.max_vehicles)])
-
-        real_of = 0
-        a = self.routes[0].edges
-        for i in self.routes[0].edges:
-            node = i.end
-            if np.random.uniform() < 0.5:
-                real_of += node.reward
-            else:
-                real_of += 0
-        print(real_of)
-
-        #print(self.of)
-        #for i in self.routes:
-        #    print(i.__str__())
-
-        return self.routes, self.of
-
-    def create_saving_list_dyn(self):
-        for i in range(len(self.nodes)-2):
-            for j in range(len(self.nodes)-2):
-                if i == j:
-                    continue
-                edge_a_b = Edge(self.nodes[i+1], self.nodes[j+1])
-                edge_a_end = Edge(self.nodes[i + 1], self.nodes[-1])
-                edge_depot_b = Edge(self.nodes[0], self.nodes[j + 1])
-                self.savings.append(Saving(self.nodes[j + 1],
-                                           self.nodes[i + 1],
-                                           self.alpha * (edge_a_end.distance + edge_depot_b.distance - edge_a_b.distance) + (1 - self.alpha) * (self.nodes[i+1].reward + self.nodes[j+1].reward),
-                                           edge_a_b.distance))
-
-        self.savings.sort(key = lambda x: x.saving)
+    def run_dynamic(self):
+        raise NotImplementedError("La subclase debe implementar este método abstracto")
