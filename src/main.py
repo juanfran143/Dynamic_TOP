@@ -3,8 +3,9 @@ from src.utils.Constants import *
 from src.algorithm.Heuristics import *
 from src.algorithm.solution import *
 from src.algorithm.static_algorithm import *
+from src.utils.Constants import *
 
-
+"""
 def deterministic_approach(max_time):
     nodes = []
 
@@ -38,6 +39,7 @@ def run_static(nodes, capacity, vehicles, blackbox=None, neighbour_limit=-1, ite
     s = Static(nodes, capacity, vehicles, bb=blackbox, neighbour_limit=neighbour_limit)
     route, static_of, dynamic_of = s.run_multi_start_static(iterations)
     print(route, static_of, dynamic_of)
+"""
 
 
 def neighbour(nodes, percentage):
@@ -60,13 +62,27 @@ def initialize_instance():
     blackbox.setter_betas(beta0, beta1, beta2, beta3)
     percentage = 1
     neighbour_limit = neighbour(nodes, percentage)
+
     return nodes, capacity, vehicles, blackbox, neighbour_limit
 
 
-if __name__ == '__main__':
-    nodes, capacity, vehicles, blackbox, neighbour_limit = initialize_instance()
+def initialize_solution():
+    nodes, capacity, vehicles = read()
+    beta0, beta1, beta2, beta3 = Betas().MEDIUM
+    blackbox = BlackBox()
+    blackbox.setter_betas(beta0, beta1, beta2, beta3)
+    percentage = 1
+    neighbour_limit = neighbour(nodes, percentage)
 
-    run_static(nodes, capacity, vehicles, blackbox=blackbox, neighbour_limit=neighbour_limit, iterations=100)
+    solution = Solution(nodes, capacity, seed=0, max_vehicles=vehicles, neighbour_limit=neighbour_limit, bb=blackbox)
+    return solution
+
+
+if __name__ == '__main__':
+    solution = initialize_solution()
+    route, fo, fo_dynamic = Algorithm.TYPE_OF_ALGORITH["STATIC"](solution)
+    print(route, fo, fo_dynamic)
+
     # nodes, max_dist, max_vehicles=1, alpha=0.7, neighbour_limit=-1, dict_of_types=None
 
     # ts = ThompsomSamplingEnvironment()

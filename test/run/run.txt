@@ -1,0 +1,2 @@
+#Instance   seed    dynamic_iterations    max_iter/time     Algorithm   selected_random_node
+tsiligirides_problem_1_budget_05.txt;2523461;100;100;STATIC;GRASP

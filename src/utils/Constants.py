@@ -1,4 +1,5 @@
 from src.algorithm.static_algorithm import *
+from src.algorithm.solution import *
 
 
 class Betas:
@@ -28,7 +29,6 @@ class Betas:
               {0: -2.5, 1: -2, 2: -0.5, 3: -0.25, 4: -0.1}]
 
 
-class Algorith:
-
-    TYPE_OF_ALGORITH = {"STATIC": Static.run_static}
+class Algorithm:
+    TYPE_OF_ALGORITH = {"STATIC": Solution.run_static}
     SELECT_SAVING = {"GREEDY": Static.select_saving_greedy, "GRASP": Static.select_saving_grasp}
