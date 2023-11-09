@@ -2,10 +2,12 @@ import math
 import random
 from itertools import product
 import numpy as np
-class node:
 
-    def __init__(self, id, reward, x, y):
-        self.id = id
+
+class Node:
+
+    def __init__(self, id_, reward, x, y):
+        self.id = id_
         self.reward = reward
         self.x = x
         self.y = y
@@ -14,28 +16,31 @@ class node:
     def __str__(self):
         return str(self.id)
 
-class edge:
+
+class Edge:
 
     def __init__(self, start, end):
         self.start = start
         self.end = end
-        self.distance = ((start.x - end.x)**2 + (start.y - end.y)**2) ** (1/2)
+        self.distance = ((start.x - end.x) ** 2 + (start.y - end.y) ** 2) ** (1 / 2)
 
     def __str__(self):
-        return str(self.start.id) + " - "+str(self.end.id)
+        return str(self.start.id) + " - " + str(self.end.id)
 
-class saving():
 
-    def __init__(self, start, end, distance, a_to_b):
+class Saving:
+
+    def __init__(self, start, end, saving, a_to_b):
         self.start = start
         self.end = end
-        self.distance = distance
+        self.saving = saving
         self.a_to_b = a_to_b
 
-class route:
 
-    def __init__(self, id, edges, distancia):
-        self.id = id
+class Route:
+
+    def __init__(self, id_, edges, distancia):
+        self.id = id_
         self.reward = 0
         self.edges = edges
         self.distance = distancia
@@ -45,7 +50,7 @@ class route:
     def reverse_edges(self):
         edges = []
         for i in range(len(self.edges)):
-            edges.append(edge(self.edges[-(i+1)].end, self.edges[-(i+1)].start))
+            edges.append(Edge(self.edges[-(i + 1)].end, self.edges[-(i + 1)].start))
 
         self.edges = edges
 
@@ -56,8 +61,14 @@ class route:
 
         return edges
 
-
     def __str__(self):
+        text = str(self.edges[0].start) + "-"
+        for i in self.edges[:-1]:
+            text += str(i.end) + "-"
+        text += str(self.edges[-1].end)
+        return text
+
+    def __repr__(self):
         text = str(self.edges[0].start) + "-"
         for i in self.edges[:-1]:
             text += str(i.end) + "-"
@@ -113,18 +124,18 @@ class BlackBox:
 
         if rand > self.get_value(node_type, battery, weather, congestion):
             if verbose:
-                print("Se pierde la capacidad del nodo")
+                print("Se pierde el reward del nodo")
             return 0
         else:
             if verbose:
-                print("No se pierde la capacidad del nodo")
+                print("No se pierde el reward del nodo")
             return 1
 
     def simulate_list(self, list_of_data):
         output = []
-        for list in list_of_data:
+        for lista in list_of_data:
             rand = random.random()
-            node_type, data = list[0], list[1:]
+            node_type, data = lista[0], lista[1:]
             if rand > self.get_value_with_list(node_type, data):
                 output.append(0)
             else:
@@ -174,14 +185,14 @@ class ThompsomSamplingEnvironment:
         combinations = list(product(*values))
         self.dict = {combo: [0, 0] for combo in combinations}
 
-    def update_dict(self,key, value):
+    def update_dict(self, key, value):
         if value == 0:
             self.dict[key][1] += 1
         else:
             self.dict[key][0] += 1
 
     def simulate(self, key):
-        s,f = self.dict[key]
+        s, f = self.dict[key]
         sim = np.random.beta(s + 1, f + 1)
         return sim
 
@@ -190,10 +201,9 @@ if __name__ == "__main__":
     ts = ThompsomSamplingEnvironment()
     ts.initialize_sampling_dict({"whether": [0, 1], "congestion": [0, 1, 3]})
     ts.simulate((0, 1))
-
-    for _ in range(0,100):
-       if np.random.uniform() < 0.7:
-           ts.update_dict((0, 1), 1)
-       else:
-           ts.update_dict((0, 1), 0)
+    for _ in range(0, 100):
+        if np.random.uniform() < 0.7:
+            ts.update_dict((0, 1), 1)
+        else:
+            ts.update_dict((0, 1), 0)
     print((ts.dict))
