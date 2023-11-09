@@ -80,7 +80,7 @@ def initialize_solution():
 
 if __name__ == '__main__':
     solution = initialize_solution()
-    route, fo, fo_dynamic = Algorithm.TYPE_OF_ALGORITH["STATIC"](solution)
+    route, fo, fo_dynamic = Algorithm.TYPE_OF_ALGORITH["STATIC"](solution, Algorithm.SELECT_SAVING["GRASP"])
     print(route, fo, fo_dynamic)
 
     # nodes, max_dist, max_vehicles=1, alpha=0.7, neighbour_limit=-1, dict_of_types=None

@@ -31,7 +31,7 @@ class Static:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, dict_of_types=None,
-                 max_iter_dynamic=100):
+                 max_iter_dynamic=100, select_saving_function=None, random_selection=2):
         self.routes = []
         self.of = 0
 
@@ -53,6 +53,9 @@ class Static:
             self.dict_of_types = dict_of_types
         else:
             self.dict_of_types = {i: 1 for i in range(len(nodes))}
+
+        self.random_selection = random_selection
+        self.select_saving_function = select_saving_function
 
     def reset(self):
         self.routes = []
@@ -92,8 +95,8 @@ class Static:
 
         self.savings.sort(key=lambda x: x.saving)
 
-    def select_saving_grasp(self, random_selection=2):
-        return self.savings.pop(rnd.randint(0, min([random_selection, len(self.savings) - 1])))
+    def select_saving_grasp(self):
+        return self.savings.pop(rnd.randint(0, min([self.random_selection, len(self.savings) - 1])))
 
     def select_saving_greedy(self):
         return self.savings.pop(0)
@@ -128,7 +131,7 @@ class Static:
         self.dummy_solution()
         self.create_saving_list()
         while len(self.savings) != 0:
-            self.merge_routes(self.select_saving_grasp())
+            self.merge_routes(self.select_saving_function(self))
 
         self.routes.sort(key=lambda x: x.reward, reverse=True)
         self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])

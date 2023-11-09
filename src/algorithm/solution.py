@@ -44,9 +44,9 @@ class Solution:
     def local_search_same_route(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")
 
-    def run_static(self):
+    def run_static(self, select_saving_function):
         s = Static(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
-                   self.bb, self.dict_of_types, self.max_iter_dynamic)
+                   self.bb, self.dict_of_types, self.max_iter_dynamic, select_saving_function=select_saving_function)
 
         return s.run_multi_start_static(self.max_iter_random)
 
