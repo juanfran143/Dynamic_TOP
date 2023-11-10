@@ -150,8 +150,8 @@ class Static:
             of = 0
             for r in self.routes[:self.max_vehicles]:
                 distance = 0
-                self.change_environment()
                 for e in r.edges[:-1]:
+                    self.change_environment()
                     distance += e.distance
                     has_reward = self.bb.simulate(self.dict_of_types[e.end.id], distance / self.max_dist, self.weather,
                                                   self.congestion[e.end.id])
