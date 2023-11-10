@@ -36,6 +36,9 @@ class Static:
         self.of = 0
 
         self.seed = seed
+        random.seed = seed
+        np.seed = seed
+
         self.nodes = nodes
         self.savings = []
         self.alpha = alpha
@@ -106,7 +109,7 @@ class Static:
         route_b = saving.end.route
         distance = route_a.distance + route_b.distance + saving.a_to_b - route_a.edges[-1].distance - route_b.edges[
             0].distance
-        if route_a.id != route_b.id and route_a.edges[0].end.id == saving.start.id and route_b.edges[
+        if route_a.id != route_b.id and route_a.edges[-1].start.id == saving.start.id and route_b.edges[
             0].end.id == saving.end.id and distance <= self.max_dist:
 
             route_a.edges.pop()

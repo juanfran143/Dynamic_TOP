@@ -1,6 +1,6 @@
 from src.utils.read_inputs import read, read_run
 from src.utils.Constants import *
-
+from src.utils.Maps import *
 
 def neighbour(nodes, percentage):
     maxim = 0
@@ -36,4 +36,6 @@ if __name__ == '__main__':
 
         algo = Algorithm.TYPE_OF_ALGORITH[instance_dict[Key.ALGORITHM]]
         selected_procedure = Algorithm.SELECT_SAVING[instance_dict[Key.SELECTED_NODE_FUNCTION]]
-        algo(solution, selected_procedure)
+        results = algo(solution, selected_procedure)
+        m = Map(instance_dict["nodes"])
+        m.print_route(results[0])

@@ -16,6 +16,9 @@ class Node:
     def __str__(self):
         return str(self.id)
 
+    def __repr__(self):
+        return str(self.id)
+
 
 class Edge:
 
@@ -25,6 +28,9 @@ class Edge:
         self.distance = ((start.x - end.x) ** 2 + (start.y - end.y) ** 2) ** (1 / 2)
 
     def __str__(self):
+        return str(self.start.id) + " - " + str(self.end.id)
+
+    def __repr__(self):
         return str(self.start.id) + " - " + str(self.end.id)
 
 

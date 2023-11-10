@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
+
+
 class Map:
     def __init__(self, nodes):
         self.nodes = nodes
 
-    def parse_connections(self,connections_str):
+    def parse_connections(self, connections_str):
         parsed_connections = []
 
         for connection_str in connections_str:
@@ -46,13 +48,12 @@ class Map:
 
         for node in self.nodes:
             # Plotting a circle at each coordinate with the reward inside
-            if node.id == 0 or node.id == 1:
+            if node.reward == 0:
                 circle = plt.Circle((node.x, node.y), 0.5, color='red', fill=True)
             else:
                 circle = plt.Circle((node.x, node.y), 0.5, color='blue', fill=False)
             ax.add_patch(circle)
-            ax.annotate(int(node.reward), (node.x, node.y), color='red', ha='center', va='center')
-
+            ax.annotate(int(node.id), (node.x, node.y), color='red', ha='center', va='center')
 
         for team in route:
             for edge in team.edges:
