@@ -1,25 +1,61 @@
 from src.utils.classes import Node
 import os
+from src.utils.Constants import Key
 
 
 def go_up_to_dynamic_top(start_path):
     current_path = start_path
-    while os.path.basename(current_path) != "Dynamic_TOP":
+    while os.path.basename(current_path) != Key.ROOT_FOLDER:
         current_path = os.path.dirname(current_path)
-        if current_path == os.path.dirname(current_path):  # This means we're at the root and didn't find "Dynamic_TOP"
+        if current_path == os.path.dirname(current_path):
             return None
     return current_path
 
 
 def find_instances_directory(start_path):
     for root, dirs, files in os.walk(start_path):
-        if "Instances" in dirs:
-            return os.path.join(root, "Instances")
+        if Key.INSTANCE_FOLDER in dirs:
+            return os.path.join(root, Key.INSTANCE_FOLDER)
     return None
 
 
-def read(name="tsiligirides_problem_1_budget_40.txt"):
-    instances_directory = find_instances_directory(go_up_to_dynamic_top(os.getcwd()))
+def find_directory(start_path, folder):
+    for root, dirs, files in os.walk(start_path):
+        if folder in dirs:
+            return os.path.join(root, folder)
+    return None
+
+
+def read_run(name="run.txt"):
+    instances_directory = find_directory(go_up_to_dynamic_top(os.getcwd()), Key.FOLDER_RUN)
+    with open(instances_directory + "\\" + name, 'r') as file:
+        lines = file.readlines()
+
+    filtered_lines = [line for line in lines if not line.startswith("#")]
+
+    data_dict = []
+    for line in filtered_lines:
+        parts = line.strip().split(';')
+        if len(parts) > 1:
+            data_dict.append({
+                Key.INSTANCE: str(parts[0]),
+                Key.SEED: int(parts[1]),
+                Key.MAX_ITER_DYNAMIC: int(parts[2]),
+                Key.MAX_TIME: int(parts[3]),
+                Key.ALGORITHM: parts[4].upper(),
+                Key.SELECTED_NODE_FUNCTION: parts[5].upper(),
+                Key.BETA_BLACKBOX: parts[6].upper(),
+                Key.MAX_ITER_RANDOM: int(parts[7]),
+                Key.ALPHA: float(parts[8]),
+                Key.PERCENTAGE: float(parts[9]),
+                Key.N_TYPE_NODES: int(parts[10])
+            })
+
+    return data_dict
+
+
+def read(name):
+    instances_directory = find_directory(go_up_to_dynamic_top(os.getcwd()), Key.INSTANCE_FOLDER)
     nodes = []
     f = open(instances_directory + "\\" + name, "r")
     f1 = open(instances_directory + "\\" + name, "r")

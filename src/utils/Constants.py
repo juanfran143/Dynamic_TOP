@@ -32,3 +32,28 @@ class Betas:
 class Algorithm:
     TYPE_OF_ALGORITH = {"STATIC": Solution.run_static}
     SELECT_SAVING = {"GREEDY": Static.select_saving_greedy, "GRASP": Static.select_saving_grasp}
+
+
+class Key:
+    ROOT_FOLDER = "Dynamic_TOP"
+    INSTANCE_FOLDER = "Instances"
+    FOLDER_RUN = "run"
+
+    NODES = "nodes"
+    MAX_DIST = "max_dist"
+    MAX_VEHICLES = "max_vehicles"
+    BLACKBOX = "bb"
+    NEIGHBOUR_LIMIT = "neighbour_limit"
+    DICT_OF_TYPE = "dict_of_types"
+    N_TYPE_NODES = "n_type_nodes"
+    PERCENTAGE = "percentage"
+    SEED = "seed"
+    ALPHA = "alpha"
+    MAX_ITER_RANDOM = "max_iter_random"
+    MAX_ITER_DYNAMIC = "max_iter_dynamic"
+    MAX_TIME = "max_time"
+    INSTANCE = "instance"
+    BETA_BLACKBOX = "beta"
+
+    ALGORITHM = "algorithm"
+    SELECTED_NODE_FUNCTION = "selected_random_node"
