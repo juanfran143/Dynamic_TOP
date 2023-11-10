@@ -4,7 +4,7 @@ from src.algorithm.Heuristics import *
 from src.algorithm.solution import *
 from src.algorithm.static_algorithm import *
 from src.utils.Constants import *
-
+from src.utils.Maps import *
 """
 def deterministic_approach(max_time):
     nodes = []
@@ -82,6 +82,9 @@ if __name__ == '__main__':
     solution = initialize_solution()
     route, fo, fo_dynamic = Algorithm.TYPE_OF_ALGORITH["STATIC"](solution, Algorithm.SELECT_SAVING["GRASP"])
     print(route, fo, fo_dynamic)
+    map = Map(solution.nodes)
+    #map.instance_map()
+    map.print_route(route)
 
     # nodes, max_dist, max_vehicles=1, alpha=0.7, neighbour_limit=-1, dict_of_types=None
 
