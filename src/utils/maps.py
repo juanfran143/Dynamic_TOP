@@ -1,7 +1,25 @@
 import matplotlib.pyplot as plt
+
+
 class Map:
     def __init__(self, nodes):
         self.nodes = nodes
+
+    def parse_connections(self, connections_str):
+        parsed_connections = []
+
+        for connection_str in connections_str:
+            # Split the connection string into two nodes
+            nodes = connection_str.split('-')
+
+            # Convert nodes to integers and create a tuple
+            connection = (int(nodes[0]), int(nodes[1]))
+
+            # Append the tuple to the list
+            parsed_connections.append(connection)
+
+        return parsed_connections
+
     def instance_map(self):
         fig, ax = plt.subplots(figsize=(8, 6))
         for node in self.nodes:
@@ -36,7 +54,6 @@ class Map:
                 circle = plt.Circle((node.x, node.y), 0.5, color='blue', fill=False)
             ax.add_patch(circle)
             ax.annotate(int(node.id), (node.x, node.y), color='red', ha='center', va='center')
-
 
         for team in route:
             for edge in team.edges:
