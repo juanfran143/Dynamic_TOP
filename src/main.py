@@ -1,6 +1,6 @@
 from src.utils.read_inputs import read, read_run
 from src.utils.Constants import *
-from src.utils.Maps import *
+from src.utils.maps import *
 
 def neighbour(nodes, percentage):
     maxim = 0
