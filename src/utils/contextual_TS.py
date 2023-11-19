@@ -72,15 +72,14 @@ class OnlineLogisticRegression:
         # initializing parameters of the model
         self.n_dim = n_dim,
 
-        self.m_intercept = np.zeros(n_dim+1)
-
         self.m = np.zeros(self.n_dim)
         self.q = np.ones(self.n_dim) * self.lambda_
 
         # initializing weights
         self.w = np.random.normal(self.m, self.alpha * (self.q) ** (-1.0), size=self.n_dim)
 
-        self.w_int = np.concatenate([self.w, np.ones(1)])
+        self.w_int = np.concatenate([self.w, np.zeros(1)])
+        self.m_int = np.concatenate([self.m, np.zeros(1)])
         print(self.w, self.w_int)
 
 
@@ -88,22 +87,25 @@ class OnlineLogisticRegression:
         pass
 
     # the loss function
+
+
     def loss(self, w, *args):
         X, y = args
-        print(w)
-        #print(0.5 * (self.q * (w[:-1] - self.m)).dot(w[:-1] - self.m) + np.sum(
-            #[np.log(1 + np.exp(-w[-1] -y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]))
-        return 0.5 * (self.q * (w[:-1] - self.m)).dot(w[:-1] - self.m) + np.sum(
-            [np.log(1 + np.exp(-w[-1] -y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])])
+        print(w[-1],w[:-1])
+        print(0.5 * (self.q * (w[:-1] - self.m_int[:-1])).dot(w[:-1] - self.m_int[:-1]) + np.sum(
+             [np.log(1 + np.exp(w[-1]+ w[:-1].dot(X[j]))) - y[j]*(w[-1]+ w[:-1].dot(X[j])) for j in range(y.shape[0])]))
+        return 0.5 * (self.q * (w[:-1] - self.m_int[:-1])).dot(w[:-1] - self.m_int[:-1]) + np.sum(
+             [np.log(1 + np.exp(w[-1] + w[:-1].dot(X[j]))) - y[j]*(w[-1]+ w[:-1].dot(X[j])) for j in range(y.shape[0])])
 
     # the gradient
+
+
     def grad(self, w, *args):
         X, y = args
-        a1 = self.q * (w[:-1] - self.m) + (-1) * np.array(
-            [y[j] * X[j] / (1. + np.exp(+ w[-1] + y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+        a1 = self.q * (w[:-1] - self.m) +  np.array(
+            [ X[j] / (1. + np.exp( w[-1] + w[:-1].dot(X[j]))) - y[j]*X[j] for j in range(y.shape[0]) ]).sum(axis=0)
 
-        a2 = (-1) * np.array( [ +1 / (1. + np.exp(+ w[-1] + y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
-        #print(a2)
+        a2 =  np.array( [ 1 / (1. + np.exp( w[-1] + w[:-1].dot(X[j]))) - y[j] for j in range(y.shape[0])]).sum(axis=0)
         return np.concatenate([a1, np.array([a2])])
 
     # method for sampling weights
@@ -123,9 +125,10 @@ class OnlineLogisticRegression:
         self.w_int = minimize(self.loss, self.w_int, args=(X, y), jac=self.grad, method="L-BFGS-B",
                           options={'maxiter': 50, 'disp': False}).x
         self.m = self.w_int[:-1]
+        self.m_int = self.w_int
 
         # step 2, update q
-        P = (1 + np.exp(-1 * X.dot(self.m))) ** (-1)
+        P = (1 + np.exp(- self.m_int[-1] - X.dot(self.m))) ** (-1)
         self.q = self.q + (P * (1 - P)).dot(X ** 2)
 
     # probability output method, using weights sample
@@ -147,7 +150,7 @@ class OnlineLogisticRegression:
             raise Exception('mode not recognized!')
 
         # calculating probabilities
-        proba = 1 / (1 + np.exp( -self.w_int[0] -1 * X.dot(w)))
+        proba = 1 / (1 + np.exp( -self.w_int[-1] -1 * X.dot(w)))
         return np.array([1 - proba, proba]).T
 
 
@@ -292,6 +295,25 @@ if __name__ == "__main__":
     print((results))
     plt.plot(results)
     plt.show()
+    
+    
+        def loss(self, w, *args):
+        X, y = args
+        print(w[-1],w[:-1])
+        print(0.5 * (self.q * (w[:-1] - self.m_int[:-1])).dot(w[:-1] - self.m_int[:-1]) - np.sum(
+            [np.log(1 + np.exp(-y[j]*w[-1] - y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]))
+        return 0.5 * (self.q * (w[:-1] - self.m_int[:-1])).dot(w[:-1] - self.m_int[:-1]) - np.sum(
+            [np.log(1 + np.exp(-y[j]*w[-1] - y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])])
+            
+            
+                def grad(self, w, *args):
+        X, y = args
+        a1 = self.q * (w[:-1] - self.m) + (-1) * np.array(
+            [y[j] * X[j] / (1. + np.exp( y[j]*w[-1] + y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+
+        a2 = (-1) * np.array( [ y[j] / (1. + np.exp( y[j]*w[-1] + y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+        #print(a2)
+        return np.concatenate([a1, np.array([a2])])
 
 """""
 
