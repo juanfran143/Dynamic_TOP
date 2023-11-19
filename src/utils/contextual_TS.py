@@ -4,8 +4,9 @@ from scipy.optimize import minimize
 import time
 import random
 #from bayes_logistic import *
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
+#from statsmodels.tools.tools import add_constant
 # This is the blackbox class, bandidts = types
 class ContextualMAB:
 
@@ -70,11 +71,18 @@ class OnlineLogisticRegression:
 
         # initializing parameters of the model
         self.n_dim = n_dim,
+
+        self.m_intercept = np.zeros(n_dim+1)
+
         self.m = np.zeros(self.n_dim)
         self.q = np.ones(self.n_dim) * self.lambda_
 
         # initializing weights
         self.w = np.random.normal(self.m, self.alpha * (self.q) ** (-1.0), size=self.n_dim)
+
+        self.w_int = np.concatenate([self.w, np.ones(1)])
+        print(self.w, self.w_int)
+
 
     def simulate(self, weather, congestion, battery) -> float:
         pass
@@ -82,14 +90,21 @@ class OnlineLogisticRegression:
     # the loss function
     def loss(self, w, *args):
         X, y = args
-        return 0.5 * (self.q * (w - self.m)).dot(w - self.m) + np.sum(
-            [np.log(1 + np.exp(-y[j] * w.dot(X[j]))) for j in range(y.shape[0])])
+        print(w)
+        #print(0.5 * (self.q * (w[:-1] - self.m)).dot(w[:-1] - self.m) + np.sum(
+            #[np.log(1 + np.exp(-w[-1] -y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]))
+        return 0.5 * (self.q * (w[:-1] - self.m)).dot(w[:-1] - self.m) + np.sum(
+            [np.log(1 + np.exp(-w[-1] -y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])])
 
     # the gradient
     def grad(self, w, *args):
         X, y = args
-        return self.q * (w - self.m) + (-1) * np.array(
-            [y[j] * X[j] / (1. + np.exp(y[j] * w.dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+        a1 = self.q * (w[:-1] - self.m) + (-1) * np.array(
+            [y[j] * X[j] / (1. + np.exp(+ w[-1] + y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+
+        a2 = (-1) * np.array( [ +1 / (1. + np.exp(+ w[-1] + y[j] * w[:-1].dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+        #print(a2)
+        return np.concatenate([a1, np.array([a2])])
 
     # method for sampling weights
     def get_weights(self):
@@ -97,25 +112,28 @@ class OnlineLogisticRegression:
 
     # fitting method
     def fit(self, X, y):
+        intercept = np.ones([X.shape[0], 1])
+        X_intercept = np.column_stack((X, intercept))
         """
         :param X: nparray (N,3)
         :param y: np ( N,1)
         :return: float
         """
         # step 1, find w
-        self.w = minimize(self.loss, self.w, args=(X, y), jac=self.grad, method="L-BFGS-B",
-                          options={'maxiter': 20, 'disp': False}).x
-        self.m = self.w
+        self.w_int = minimize(self.loss, self.w_int, args=(X, y), jac=self.grad, method="L-BFGS-B",
+                          options={'maxiter': 50, 'disp': False}).x
+        self.m = self.w_int[:-1]
 
         # step 2, update q
-        P = (1 + np.exp(1 - X.dot(self.m))) ** (-1)
+        P = (1 + np.exp(-1 * X.dot(self.m))) ** (-1)
         self.q = self.q + (P * (1 - P)).dot(X ** 2)
 
     # probability output method, using weights sample
     def predict_proba(self, X, mode='sample'):
-
+        intercept = np.ones([X.shape[0], 1])
+        X_intercept = np.column_stack((X, intercept))
         # adding intercept to X
-        # X = add_constant(X)
+        #X = add_constant(X)
 
         # sampling weights after update
         self.w = self.get_weights()
@@ -129,7 +147,7 @@ class OnlineLogisticRegression:
             raise Exception('mode not recognized!')
 
         # calculating probabilities
-        proba = 1 / (1 + np.exp(-1 * X.dot(w)))
+        proba = 1 / (1 + np.exp( -self.w_int[0] -1 * X.dot(w)))
         return np.array([1 - proba, proba]).T
 
 
@@ -140,16 +158,17 @@ if __name__ == "__main__":
     cmab3 = ContextualMAB()
 
     # These are the 3 variables, if the range is positive, BAD
-    X1 = np.random.choice([-1, +1], size=20)
-    X2 = np.random.choice([-1, +1], size=20)
-    X3 = np.random.uniform(-1, 1, 20)
+    X1 = np.random.choice([-1, +1], size=1000)
+    X2 = np.random.choice([-1, +1], size=1000)
+    X3 = np.random.uniform(-1, 1, 1000)
     X = np_combined_array = np.column_stack((X1, X2, X3))
+    x_res = X.reshape(-3, 3)
     # cmb3.draw is to simulate in blacbox
-    y = np.array([cmab3.draw(1, X[i])[0] for i in range(0, len(X1))])
+    y = np.array([cmab3.draw(0, X[i])[0] for i in range(0, len(X1))])
 
     # OLR object
     online_lrn3 = OnlineLogisticRegression(0.5, 1, 3)
-    x_res = X.reshape(-3, 3)
+
     # start = time.time()
     online_lrn3.fit(x_res, y)
     # end = time.time()
@@ -157,28 +176,32 @@ if __name__ == "__main__":
 
     # Now test the capacity of prediction with a sample of 10
 
-    X1 = np.random.choice([-1, 1], size=2)
-    X2 = np.random.choice([-1, 1], size=2)
-    X3 = np.random.uniform(-1, 1, 2)
+    X1 = np.random.choice([-1, 1], size=5)
+    X2 = np.random.choice([-1, 1], size=5)
+    X3 = np.random.uniform(-1, 1, 5)
     X_test = np_combined_array = np.column_stack((X1, X2, X3))
     x_test = X.reshape(-3, 3)
-    yprueba = np.array([cmab3.prob(1, X_test[i]) for i in range(0, len(X1))])
+    yprueba = np.array([cmab3.prob(0, X_test[i]) for i in range(0, len(X1))])
 
     print(yprueba)
 
     print(online_lrn3.predict_proba(X_test, "sample"))
-    X1 = np.random.choice([-1, +1], size=20)
-    X2 = np.random.choice([-1, +1], size=20)
-    X3 = np.random.uniform(-1, 1, 20)
-    X = np_combined_array = np.column_stack((X1, X2, X3))
-    x_res = X.reshape(-3, 3)
-    online_lrn3.fit(x_res, y)
+
+
 
 
 
 
 
     """"
+    
+        X1 = np.random.choice([-1, +1], size=20)
+    X2 = np.random.choice([-1, +1], size=20)
+    X3 = np.random.uniform(-1, 1, 20)
+    X = np_combined_array = np.column_stack((X1, X2, X3))
+    x_res = X.reshape(-3, 3)
+    online_lrn3.fit(x_res, y)
+    
     np.random.seed(12345)
     X1 = np.random.choice([0, 1], size=100)
     X2 = np.random.choice([0, 1], size=100)
