@@ -1,9 +1,8 @@
-import copy
-from src.utils.classes import *
-import random as rnd
-import numpy as np
-import time
 from src.algorithm.static_algorithm import *
+from src.utils.Constants import Algorithm, Key
+from src.utils.contextual_TS import OnlineLogisticRegression
+from src.algorithm.dynamic import *
+from src.algorithm.dynamic_constructive import DynamicConstructive
 
 
 class Solution:
@@ -38,17 +37,31 @@ class Solution:
         self.routes = []
         self.savings = []
 
-    def select_saving(self, random_selection=2):
-        raise NotImplementedError("La subclase debe implementar este método abstracto")
-
     def local_search_same_route(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")
 
-    def run_static(self, select_saving_function):
-        s = Static(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
-                   self.bb, self.dict_of_types, self.max_iter_dynamic, select_saving_function=select_saving_function)
+    def run(self, algo, select_saving_function, instance):
 
-        return s.run_multi_start_static(self.max_iter_random)
+        if algo == Algorithm.STATIC:
+            s = Static(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
+                       self.bb, self.dict_of_types, self.max_iter_dynamic,
+                       select_saving_function=select_saving_function)
+
+            return s.run_multi_start_static(self.max_iter_random)
+        if algo == Algorithm.DYNAMIC:
+            ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
+            s = Dynamic(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
+                        self.bb, ts, self.dict_of_types, self.max_iter_dynamic,
+                        select_saving_function=select_saving_function)
+
+            return s.run_multi_start_dynamic(10, self.max_iter_random)
+        if algo == Algorithm.CONSTRUCTIVE_DYNAMIC:
+            ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
+            s = DynamicConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
+                                    self.neighbour_limit, self.bb, ts, self.dict_of_types, self.max_iter_dynamic,
+                                    select_saving_function=select_saving_function)
+
+            return s.constructive_dynamic_algorithm()
 
     def run_dynamic(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")

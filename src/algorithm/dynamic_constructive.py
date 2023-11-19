@@ -2,11 +2,11 @@ import copy
 from src.utils.classes import *
 import random as rnd
 import numpy as np
-from src.utils.Constants import Algorithm
 import time
+from src.utils.Constants import Algorithm
 
 
-class Dynamic:
+class DynamicConstructive:
     """
     Clase que ejecutará el algoritmo statico, es decir, el que no tiene en cuenta
     el dinamismo del problema. Habrá una función statica que es la que se tendrá
@@ -31,7 +31,7 @@ class Dynamic:
 
     """
 
-    def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, ts=None,
+    def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, wb=None,
                  dict_of_types=None, max_iter_dynamic=100, select_saving_function=None, random_selection=2):
         self.routes = []
         self.of = 0
@@ -51,9 +51,9 @@ class Dynamic:
         self.weather = random.randint(0, 1)
         self.congestion = {i: random.randint(0, 1) for i in range(len(nodes))}
         self.bb = bb
-        self.ts = ts # OnlineLogisticRegression(0.5, 1, 3)
-        self.X = {k: [] for k in range(len(ts.keys()))}
-        self.y = {k: [] for k in range(len(ts.keys()))}
+        self.ts = wb # OnlineLogisticRegression(0.5, 1, 3)
+        self.X = np.array([])
+        self.y = np.array([])
         self.max_iter_dynamic = max_iter_dynamic
 
         if dict_of_types:
@@ -66,11 +66,11 @@ class Dynamic:
 
     def saving_function(self, select_saving_function):
         if select_saving_function == Algorithm.SELECT_SAVING_GREEDY:
-            return self.select_saving_greedy
+            return None
         if select_saving_function == Algorithm.SELECT_SAVING_GRASP:
-            return self.select_saving_grasp
+            return None
         if select_saving_function is None:
-            return self.select_saving_grasp
+            return None
 
     def reset(self):
         self.routes = []
@@ -102,28 +102,19 @@ class Dynamic:
                 edge_a_end = Edge(self.nodes[i + 1], self.nodes[-1])
                 edge_depot_b = Edge(self.nodes[0], self.nodes[j + 1])
                 
-                node_type_a = self.dict_of_types[self.nodes[i + 1].id]
-                node_type_b = self.dict_of_types[self.nodes[j + 1].id]
-
-                array_a = np.array((self.weather, self.congestion[self.nodes[i + 1].id], 1))
-                array_b = np.array((self.weather, self.congestion[self.nodes[i + 1].id], 1))
-                ts_sim_a = self.ts[node_type_a].predict_proba(array_a, 'sample')
-                ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
+                node_type_a = self.dict_of_types[self.nodes[i + 1]]
+                node_type_b = self.dict_of_types[self.nodes[j + 1]]
+                ts_sim_a = ts.simulate((node_type_a, self.weather, self.congestion[self.nodes[i + 1]], 1))
+                ts_sim_b = ts.simulate((node_type_b, self.weather, self.congestion[self.nodes[i + 1]], 1))
                 
                 saving_distance = self.alpha * (edge_a_end.distance + edge_depot_b.distance - edge_a_b.distance)
-                saving_reward = (1 - self.alpha) * (self.nodes[i + 1].reward * ts_sim_a[0] +
-                                                    self.nodes[j + 1].reward * ts_sim_b[0])
+                saving_reward = (1 - self.alpha) * (self.nodes[i + 1].reward * ts_sim_a + 
+                                                    self.nodes[j + 1].reward * ts_sim_b) 
 
                 self.savings.append(Saving(self.nodes[j + 1], self.nodes[i + 1], saving_distance + saving_reward,
                                            edge_a_b.distance))
 
         self.savings.sort(key=lambda x: x.saving)
-
-    def select_saving_grasp(self):
-        return self.savings.pop(rnd.randint(0, min([self.random_selection, len(self.savings) - 1])))
-
-    def select_saving_greedy(self):
-        return self.savings.pop(0)
 
     def merge_routes(self, saving):
         route_a = saving.start.route
@@ -142,25 +133,81 @@ class Dynamic:
 
             self.routes.pop(self.routes.index(route_b))
 
-    def local_search_same_route(self):
-        """
-        En el determinista no tiene sentido, pero en el simheurístico sí.
-        :return:
-        """
-        for route in self.routes:
-            for Edge in route:
-                pass
+    def constructive_dynamic_solution(self):
+        self.routes = {}
+        nodes = copy.deepcopy(self.nodes)
 
-    def dynamic_algorithm(self):
-        self.dummy_solution()
-        self.create_saving_list()
-        while len(self.savings) != 0:
-            self.merge_routes(self.select_saving_function())
+        self.routes = {k: [nodes[0]] for k in range(self.max_vehicles)}
+        end = {k: False for k in range(self.max_vehicles)}
+        dist = {k: 0 for k in range(self.max_vehicles)}
+        reward = {k: 0 for k in range(self.max_vehicles)}
+        dynamic_reward = {k: 0 for k in range(self.max_vehicles)}
+        nodes_used = []
+        while sum(end.values()) != len(end):
+            for v in range(self.max_vehicles):
+                if end[v]:
+                    continue
+                start_node = self.routes[v][-1]
+                self.savings = []
+                for j in range(len(self.nodes) - 2):
+                    edge_a_b = Edge(start_node, self.nodes[j + 1])
 
-        self.routes.sort(key=lambda x: x.reward, reverse=True)
+                    if not self.is_neighbour(edge_a_b) or self.nodes[j+1].id in nodes_used:
+                        continue
+
+                    edge_depot_b = Edge(self.nodes[j + 1], self.nodes[-1])
+
+                    if dist[v] + edge_depot_b.distance + edge_a_b.distance > self.max_dist:
+                        continue
+
+                    node_type_b = self.dict_of_types[self.nodes[j + 1].id]
+                    array_b = np.array((self.weather, self.congestion[self.nodes[j + 1].id],
+                                        1-(dist[v] + edge_depot_b.distance)/self.max_dist))
+                    ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
+
+                    saving_distance = self.alpha * edge_a_b.distance
+                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward * ts_sim_b[0])
+
+                    self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
+                                               edge_a_b.distance))
+
+                if len(self.savings) == 0:
+                    end[v] = True
+                else:
+                    self.savings.sort(key=lambda x: x.saving)
+
+                if len(self.savings) != 0:
+                    self.routes[v].append(self.savings[0].end)
+                    nodes_used.append(self.savings[0].end.id)
+
+                    reward[v] += self.savings[0].end.reward
+                    dist[v] += self.savings[0].a_to_b
+                    node_id = self.savings[0].end.id
+                    node_type = self.dict_of_types[node_id]
+                    has_reward = self.bb.simulate(node_type, 1-dist[v] / self.max_dist, self.weather,
+                                                  self.congestion[node_id])
+                    dynamic_reward[v] += self.savings[0].end.reward*has_reward
+                else:
+                    last = Edge(self.routes[v][-1], self.nodes[-1])
+                    self.routes[v].append(self.nodes[-1])
+                    dist[v] += last.distance
+                self.change_environment()
+
+        routes = []
+        for k, v in self.routes.items():
+            edges = []
+            for n in range(len(v)-1):
+                edges.append(Edge(v[n], v[n+1]))
+            routes.append(Route(k, edges, dist[k]))
+            routes[k].reward = reward[k]
+        self.routes = routes
+        return sum(dynamic_reward[v] for v in range(self.max_vehicles))
+
+    def constructive_dynamic_algorithm(self):
+        dynamic_of = self.constructive_dynamic_solution()
         self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
 
-        return self.routes, self.of
+        return self.routes, self.of, dynamic_of
 
     def dynamic_algorithm_real_time(self):
         self.dummy_solution()
@@ -186,17 +233,11 @@ class Dynamic:
             for r in self.routes[:self.max_vehicles]:
                 distance = 0
                 for e in r.edges[:-1]:
-                    distance += e.distance
-                    node_type = self.dict_of_types[e.end.id]
-                    has_reward = self.bb.simulate(node_type, distance / self.max_dist, self.weather,
-                                                  self.congestion[e.end.id])
-
-                    self.X[node_type] = np.append(self.X[node_type], np.array([self.weather, self.congestion[e.end.id],
-                                                  distance / self.max_dist]))
-                    self.y[node_type] = np.append(self.y[node_type], has_reward)
-
-                    of += e.end.reward * has_reward
                     self.change_environment()
+                    distance += e.distance
+                    has_reward = self.bb.simulate(self.dict_of_types[e.end.id], distance / self.max_dist, self.weather,
+                                                  self.congestion[e.end.id])
+                    of += e.end.reward * has_reward
 
             of_list.append(of)
 
@@ -207,21 +248,18 @@ class Dynamic:
         dynamic_of = self.dynamic_of()
         return self.routes[:self.max_vehicles], self.of, dynamic_of
 
-    def dynamic_multi_start_iter(self, max_iter: int):
-        best_route, _, best_of = self.run_dynamic()
+    def static_multi_start_iter(self, max_iter: int):
+        best_route, best_of = self.static_algorithm()
         for _ in range(max_iter):
             self.reset()
-            new_route, _, new_sol = self.run_dynamic()
+            new_route, new_sol = self.static_algorithm()
             if best_of < new_sol:
                 best_of = new_sol
                 best_route = copy.deepcopy(new_route)
 
         self.routes = best_route
 
-    def run_multi_start_dynamic(self, iter_problem, max_iter):
-        for _ in range(iter_problem):
-            self.dynamic_multi_start_iter(max_iter)
-            for k in self.ts.keys():
-                if len(self.y[k]) > 1:
-                    self.ts[k].fit(self.X[k], self.y[k])
-        return self.routes[:self.max_vehicles], self.of
+    def run_multi_start_static(self, max_iter):
+        self.static_multi_start_iter(max_iter)
+        dynamic_of = self.dynamic_of()
+        return self.routes[:self.max_vehicles], self.of, dynamic_of

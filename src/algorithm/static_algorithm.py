@@ -3,6 +3,7 @@ from src.utils.classes import *
 import random as rnd
 import numpy as np
 import time
+from src.utils.Constants import Algorithm
 
 
 class Static:
@@ -58,8 +59,15 @@ class Static:
             self.dict_of_types = {i: 1 for i in range(len(nodes))}
 
         self.random_selection = random_selection
-        self.select_saving_function = select_saving_function
+        self.select_saving_function = self.saving_function(select_saving_function)
 
+    def saving_function(self, select_saving_function):
+        if select_saving_function == Algorithm.SELECT_SAVING_GREEDY:
+            return self.select_saving_greedy
+        if select_saving_function == Algorithm.SELECT_SAVING_GRASP:
+            return self.select_saving_grasp
+        if select_saving_function is None:
+            return self.select_saving_grasp
     def reset(self):
         self.routes = []
         self.savings = []

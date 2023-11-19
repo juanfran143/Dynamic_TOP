@@ -14,7 +14,7 @@ class ContextualMAB:
         # we build two bandits
         self.weights = {}
         self.weights[0] = [0, -0.8, -0.3, -1.5]
-        self.weights[1] = [0.7, -0.8, -0.3, -1.5]
+        self.weights[1] = [0, -0.8, -0.3, -1.5]
 
     # method for acting on the bandits
     def draw(self, k, x):
@@ -90,7 +90,7 @@ class OnlineLogisticRegression:
 
     # fitting method
     def fit(self, X, y):
-
+        X = X.reshape(-3, 3)
         # step 1, find w
         self.w = minimize(self.loss, self.w, args=(X, y), jac=self.grad, method="L-BFGS-B",
                           options={'maxiter': 20, 'disp': True}).x

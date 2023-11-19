@@ -1,6 +1,3 @@
-from src.algorithm.static_algorithm import *
-from src.algorithm.solution import *
-
 
 class Betas:
     LOW = [{0: 0.7, 1: 0.8, 2: 0.9, 3: 1, 4: 1.1},
@@ -30,8 +27,11 @@ class Betas:
 
 
 class Algorithm:
-    TYPE_OF_ALGORITH = {"STATIC": Solution.run_static}
-    SELECT_SAVING = {"GREEDY": Static.select_saving_greedy, "GRASP": Static.select_saving_grasp}
+    STATIC = "STATIC"
+    DYNAMIC = "DYNAMIC"
+    CONSTRUCTIVE_DYNAMIC = "CONSTRUCTIVE_DYNAMIC"
+    SELECT_SAVING_GREEDY = "GREEDY"
+    SELECT_SAVING_GRASP = "GRASP"
 
 
 class Key:

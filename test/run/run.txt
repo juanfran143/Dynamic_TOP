@@ -1,2 +1,2 @@
 #Instance   seed    max_iter_dynamic    max_time     Algorithm   selected_random_node    Beta    max_iter_random alpha   percentage  n_type_nodes
-tsiligirides_problem_1_budget_40.txt;2523461;1;1;STATIC;GRASP;MEDIUM;100;0.7;0.5;5
+tsiligirides_problem_1_budget_40.txt;2523461;1;1;CONSTRUCTIVE_DYNAMIC;GRASP;MEDIUM;10;0.7;0.5;2

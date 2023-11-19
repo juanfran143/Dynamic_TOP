@@ -1,6 +1,9 @@
 from src.utils.read_inputs import read, read_run
 from src.utils.Constants import *
 from src.utils.maps import *
+from src.utils.classes import *
+from src.algorithm.solution import Solution
+
 
 def neighbour(nodes, percentage):
     maxim = 0
@@ -34,8 +37,8 @@ if __name__ == '__main__':
     for instance_dict in instance:
         solution, instance_dict = create_instance(instance_dict)
 
-        algo = Algorithm.TYPE_OF_ALGORITH[instance_dict[Key.ALGORITHM]]
-        selected_procedure = Algorithm.SELECT_SAVING[instance_dict[Key.SELECTED_NODE_FUNCTION]]
-        results = algo(solution, selected_procedure)
+        algo = instance_dict[Key.ALGORITHM]
+        selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
+        results = solution.run(algo, selected_procedure, instance_dict)
         m = Map(instance_dict["nodes"])
         m.print_route(results[0])
