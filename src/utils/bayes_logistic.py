@@ -312,7 +312,7 @@ class EBLogisticRegression(BayesianLogisticRegression):
     '''
 
     def __init__(self, n_iter=50, tol=1e-3, solver='lbfgs_b', n_iter_solver=15,
-                 tol_solver=1e-3, fit_intercept=True, alpha=1e-6, verbose=False):
+                 tol_solver=1e-3, fit_intercept=True, alpha=1e-6, verbose=True):
         super(EBLogisticRegression, self).__init__(n_iter, tol, fit_intercept, verbose)
         self.n_iter_solver = n_iter_solver
         self.tol_solver = tol_solver

@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import minimize
 import time
 import random
-#from bayes_logistic import *
+from bayes_logistic import *
 
 import matplotlib.pyplot as plt
 #from statsmodels.tools.tools import add_constant
@@ -157,6 +157,56 @@ class OnlineLogisticRegression:
 
 if __name__ == "__main__":
     np.random.seed(123)
+    cmab3 = ContextualMAB()
+    X1 = np.random.choice([0, 1], size=1000)
+    X2 = np.random.choice([0, 1], size=1000)
+    X3 = np.random.uniform(0, 1, 1000)
+    X = np.column_stack((X1, X2, X3))
+    y = np.array([cmab3.draw(0, X[i])[0] for i in range(0, len(X1))])
+    results = []
+
+    X1_r = np.random.choice([0, 1], size=3)
+    X2_r = np.random.choice([0, 1], size=3)
+    X3_r = np.random.uniform(0, 1, 3)
+    X_r = np.column_stack((X1_r, X2_r, X3_r))
+    yprueba = np.array([cmab3.prob(0, X_r[n]) for n in range(0, len(X1_r))])
+    print(yprueba)
+
+    for i in range(10, 11):
+        b_log = EBLogisticRegression()
+        b_log.fit(X, y)
+        print(b_log.coef_)
+        print((i))
+
+        for _ in range(0, i):
+            print(b_log.coef_)
+            X1_new = np.random.choice([0, 1], size=1000)
+            X2_new = np.random.choice([0, 1], size=1000)
+            X3_new = np.random.uniform(0, 1, 1000)
+            X_new = np.column_stack((X1_new, X2_new, X3_new))
+            y_new = np.array([cmab3.draw(0, X_new[k])[0] for k in range(0, len(X1_new))])
+            b_log = b_log.fit(X_new, y_new)
+
+        b = b_log.predict_proba(X_r)
+        print(b)
+        mse = 0
+        for j in range(0, len(yprueba)):
+            mse += abs(b[j][0] - yprueba[j][0])
+        mse = mse / len(yprueba)
+        results.append(mse)
+
+    print((results))
+    plt.plot(results)
+    plt.show()
+
+
+
+
+
+
+    """"
+    
+    np.random.seed(123)
     # cmab3 is blackbox
     cmab3 = ContextualMAB()
 
@@ -189,16 +239,9 @@ if __name__ == "__main__":
     print(yprueba)
 
     print(online_lrn3.predict_proba(X_test, "sample"))
-
-
-
-
-
-
-
-    """"
     
-        X1 = np.random.choice([-1, +1], size=20)
+    
+    X1 = np.random.choice([-1, +1], size=20)
     X2 = np.random.choice([-1, +1], size=20)
     X3 = np.random.uniform(-1, 1, 20)
     X = np_combined_array = np.column_stack((X1, X2, X3))
