@@ -142,7 +142,7 @@ class Static:
         self.dummy_solution()
         self.create_saving_list()
         while len(self.savings) != 0:
-            self.merge_routes(self.select_saving_function(self))
+            self.merge_routes(self.select_saving_function())
 
         self.routes.sort(key=lambda x: x.reward, reverse=True)
         self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])

@@ -42,3 +42,4 @@ if __name__ == '__main__':
         results = solution.run(algo, selected_procedure, instance_dict)
         m = Map(instance_dict["nodes"])
         m.print_route(results[0])
+        print("OF: " + str(results[1]))
