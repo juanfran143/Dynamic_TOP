@@ -40,6 +40,6 @@ if __name__ == '__main__':
         algo = instance_dict[Key.ALGORITHM]
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
         results = solution.run(algo, selected_procedure, instance_dict)
-        #m = Map(instance_dict["nodes"])
-        #m.print_route(results[0])
-        #print("OF: " + str(results[1]))
+        m = Map(instance_dict["nodes"])
+        m.print_route(results[0],show="reward")
+        print("OF: " + str(results[1]))

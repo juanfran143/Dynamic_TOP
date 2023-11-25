@@ -32,7 +32,7 @@ class DynamicConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, wb=None,
-                 dict_of_types=None, max_iter_dynamic=100, select_saving_function=None, random_selection=2):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, select_saving_function=None, random_selection=2):
         self.routes = []
         self.of = 0
 
@@ -46,13 +46,14 @@ class DynamicConstructive:
         self.max_dist = max_dist
         self.max_vehicles = max_vehicles
         self.neighbour_limit = neighbour_limit
+        self.n_types_nodes = n_types_nodes
 
         random.seed = self.seed
         self.weather = random.choice([-1, 1])
         self.congestion = {i: random.choice([-1, 1]) for i in range(len(nodes))}
         self.bb = bb
         self.ts = wb # OnlineLogisticRegression(0.5, 1, 3)
-        self.new_data = {0:[], 1:[]}
+        self.new_data = {i: [] for i in range(n_types_nodes)}
         #self.X = np.array([])
         #self.y = np.array([])
         self.max_iter_dynamic = max_iter_dynamic
@@ -90,6 +91,9 @@ class DynamicConstructive:
         if edge.distance > self.neighbour_limit:
             return False
         return True
+
+    """
+    not needed this code right?
 
     def create_saving_list(self):
         for i in range(len(self.nodes) - 2):
@@ -133,10 +137,11 @@ class DynamicConstructive:
                 i.end.route = route_a
 
             self.routes.pop(self.routes.index(route_b))
+"""
 
     def constructive_dynamic_solution(self):
         self.routes = {}
-        self.new_data = {0:[], 1:[]}
+        self.new_data = {i: [] for i in range(self.n_types_nodes)}
         nodes = copy.deepcopy(self.nodes)
 
         self.routes = {k: [nodes[0]] for k in range(self.max_vehicles)}
@@ -214,7 +219,7 @@ class DynamicConstructive:
 
     def constructive_dynamic_algorithm(self):
         of_list = []
-        for _ in range(0,1000):
+        for _ in range(0, 100):
             dynamic_of = self.constructive_dynamic_solution()
             of_list.append(dynamic_of)
             for i in range(0, 2):

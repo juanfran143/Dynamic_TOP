@@ -58,8 +58,8 @@ class Solution:
         if algo == Algorithm.CONSTRUCTIVE_DYNAMIC:
             ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
             s = DynamicConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
-                                    self.neighbour_limit, self.bb, ts, self.dict_of_types, self.max_iter_dynamic,
-                                    select_saving_function=select_saving_function)
+                                    self.neighbour_limit, self.bb, ts, self.dict_of_types, instance[Key.N_TYPE_NODES],
+                                    self.max_iter_dynamic, select_saving_function=select_saving_function)
 
             return s.constructive_dynamic_algorithm()
 
