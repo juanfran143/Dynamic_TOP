@@ -110,10 +110,10 @@ class BlackBox:
         self.beta_3 = beta_3
         self.n = len(beta_0)
 
-    def get_value(self, node_type, battery, weather=0, congestion=0):
-        battery_value = self.beta_1[node_type] * battery
-        weather_value = self.beta_2[node_type] * weather
-        congestion_value = self.beta_3[node_type] * congestion
+    def get_value(self, node_type,  weather=0, congestion=0, battery=1):
+        weather_value = self.beta_1[node_type] * weather
+        congestion_value = self.beta_2[node_type] * congestion
+        battery_value = self.beta_3[node_type] * battery
         exponent = self.beta_0[node_type] + weather_value + battery_value + congestion_value
         if exponent < -100:
             exponent = -100
@@ -121,19 +121,19 @@ class BlackBox:
         return 1 / (1 + math.exp(-exponent))
 
     def get_value_with_list(self, node_type, list_of_data):
-        battery_value = self.beta_1[node_type] * list_of_data[self.n - 2]
-        weather_value = self.beta_2[node_type] * list_of_data[self.n - 1]
-        congestion_value = self.beta_3[node_type] * list_of_data[self.n]
+        weather_value = self.beta_1[node_type] * list_of_data[self.n - 2]
+        congestion_value = self.beta_2[node_type] * list_of_data[self.n-1]
+        battery_value = self.beta_3[node_type] * list_of_data[self.n]
         exponent = self.beta_0[node_type] + weather_value + battery_value + congestion_value
 
         return 1 / (1 + math.exp(-exponent))
 
-    def simulate(self, node_type, battery=0, weather=0, congestion=0, verbose=False):
+    def simulate(self, node_type, weather=0, congestion=0,battery=0, verbose=False):
         rand = random.random()
         if verbose:
-            print("La probabilidad de la black box ha sido: " + str(self.get_value(weather, battery, congestion)))
+            print("La probabilidad de la black box ha sido: " + str(self.get_value(node_type, weather, congestion, battery)))
 
-        if rand > self.get_value(node_type, battery, weather, congestion):
+        if rand < self.get_value(node_type,  weather, congestion, battery):
             if verbose:
                 print("Se pierde el reward del nodo")
             return 0
