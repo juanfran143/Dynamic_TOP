@@ -35,6 +35,7 @@ class ContextualMAB:
         # give reward according to probability
         return np.random.choice([0, 1], p=[1 - prob_dict[k], prob_dict[k]]), max(prob_dict.values()) - prob_dict[k], \
         prob_dict[k]
+
     def prob(self, k, x):
         # probability dict
         prob_dict = {}
@@ -70,7 +71,7 @@ class OnlineLogisticRegression:
         self.q = np.ones(self.n_dim) * self.lambda_
 
         # initializing weights
-        self.w = np.random.normal(self.m, self.alpha * (self.q) ** (-1.0), size=self.n_dim)
+        self.w = np.random.normal(self.m, self.alpha * self.q ** (-1.0), size=self.n_dim)
 
     # the loss function
     def loss(self, w, *args):
@@ -120,7 +121,6 @@ class OnlineLogisticRegression:
         # calculating probabilities
         proba = 1 / (1 + np.exp(-1 * X.dot(w)))
         return np.array([1 - proba, proba]).T
-
 
 
 if __name__ == "__main__":
