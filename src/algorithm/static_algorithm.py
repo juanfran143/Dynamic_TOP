@@ -30,7 +30,8 @@ class Static:
 
     """
 
-    def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, dict_of_types=None,
+    def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
+                 dict_of_types=None,
                  max_iter_dynamic=100, select_saving_function=None, random_selection=2):
         self.routes = []
         self.of = 0
@@ -126,9 +127,75 @@ class Static:
         En el determinista no tiene sentido, pero en el simheurístico sí.
         :return:
         """
+        # 0-6-30-17-19-32
         for route in self.routes:
-            for Edge in route:
-                pass
+            improve = True
+            while improve:
+                improve = False
+                edges = route.edges
+                for i in range(len(route.edges) - 2):
+                    for j in range(i + 1, len(route.edges) - 1):
+                        x_i, y_i, z_i = edges[i].start, edges[i].end, edges[i + 1].end
+                        x_j, y_j, z_j = edges[j].start, edges[j].end, edges[j + 1].end
+                        if j == i + 1:
+                            original_edge = edges[i].distance + edges[j + 1].distance
+                            proposal_edge = y_i.distance(z_j) + y_j.distance(x_i)
+                        else:
+                            original_edge = edges[i].distance + edges[i + 1].distance + edges[j].distance + \
+                                            edges[j + 1].distance
+                            proposal_edge = y_i.distance(x_i) + y_i.distance(z_j) + y_j.distance(x_i) + \
+                                            y_j.distance(z_i)
+
+                        if proposal_edge < original_edge:
+                            improve = True
+                            edges[i] = Edge(x_i, y_j)
+                            edges[i + 1] = Edge(y_j, z_i)
+                            edges[j] = Edge(x_j, y_i)
+                            edges[j + 1] = Edge(y_i, z_j)
+                            route.distance = route.distance + proposal_edge - original_edge
+
+    def calculate_saving_from_last_node(self, last_node, nodes):
+        """
+        Calculate if possible and return the one with the best "saving"
+        :param last_node: Last node visited
+        :param nodes: Nodes not used in the solution
+        :return:
+        """
+        end_point = self.nodes[-1]
+        saving = {}
+        for node in nodes:
+            distance = last_node.distance(node)
+            if distance + node.distance(end_point) > self.max_dist:
+                continue
+            saving[node] = distance + node.reward
+
+        if len(saving) == 0:
+            return None
+
+        b = list(saving.items())
+        b = b.sort(key=lambda x: x[1])
+        return b[0][0]
+
+    def local_search_add_nodes(self):
+        routes = self.routes[:self.max_vehicles]
+
+        aux = [[i.end.id_ for i in route.edges] for route in routes]
+        used_nodes = []
+        for i in aux:
+            used_nodes += i
+
+        nodes = [i for i in self.nodes if i.id_ not in used_nodes]
+        for route in routes:
+            improve = True
+            while improve:
+                improve = False
+                last_node = route.edges[-1].start
+                selected = self.calculate_saving_from_last_node(last_node, nodes)
+                if selected is not None:
+                    improve = True
+                    nodes.append(selected)
+                    route.edges[-1] = Edge(last_node, selected)
+                    route.edges.append(Edge(selected, self.nodes[-1]))
 
     def static_algorithm(self):
         self.dummy_solution()
@@ -137,6 +204,8 @@ class Static:
             self.merge_routes(self.select_saving_function(self))
 
         self.routes.sort(key=lambda x: x.reward, reverse=True)
+        self.local_search_same_route()
+        self.local_search_add_nodes()
         self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
 
         return self.routes, self.of

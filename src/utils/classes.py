@@ -13,6 +13,9 @@ class Node:
         self.y = y
         self.route = None
 
+    def distance(self, end):
+        return ((self.x - end.x) ** 2 + (self.y - end.y) ** 2) ** (1 / 2)
+
     def __str__(self):
         return str(self.id)
 
