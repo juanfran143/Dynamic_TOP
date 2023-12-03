@@ -48,7 +48,6 @@ class Static:
         self.max_vehicles = max_vehicles
         self.neighbour_limit = neighbour_limit
 
-        random.seed = self.seed
         self.weather = random.randint(0, 1)
         self.congestion = {i: random.randint(0, 1) for i in range(len(nodes))}
         self.bb = bb
@@ -69,6 +68,7 @@ class Static:
             return self.select_saving_grasp
         if select_saving_function is None:
             return self.select_saving_grasp
+
     def reset(self):
         self.routes = []
         self.savings = []
@@ -151,7 +151,7 @@ class Static:
                         else:
                             original_edge = edges[i].distance + edges[i + 1].distance + edges[j].distance + \
                                             edges[j + 1].distance
-                            proposal_edge = y_i.distance(x_i) + y_i.distance(z_j) + y_j.distance(x_i) + \
+                            proposal_edge = y_i.distance(x_j) + y_i.distance(z_j) + y_j.distance(x_i) + \
                                             y_j.distance(z_i)
 
                         if proposal_edge < original_edge:
@@ -162,9 +162,10 @@ class Static:
                             edges[j + 1] = Edge(y_i, z_j)
                             route.distance = route.distance + proposal_edge - original_edge
 
-    def calculate_saving_from_last_node(self, last_node, nodes):
+    def calculate_saving_from_last_node(self, last_node, nodes, current_distance):
         """
         Calculate if possible and return the one with the best "saving"
+        :param current_distance:
         :param last_node: Last node visited
         :param nodes: Nodes not used in the solution
         :return:
@@ -173,37 +174,37 @@ class Static:
         saving = {}
         for node in nodes:
             distance = last_node.distance(node)
-            if distance + node.distance(end_point) > self.max_dist:
+            if distance + node.distance(end_point) + current_distance > self.max_dist:
                 continue
             saving[node] = distance + node.reward
 
         if len(saving) == 0:
             return None
 
-        b = list(saving.items())
-        b = b.sort(key=lambda x: x[1])
-        return b[0][0]
+        sorted_d = dict(sorted(saving.items(), key=lambda item: item[1], reverse=True))
+        first_element = next(iter(sorted_d.items()))
+        return first_element[0]
 
     def local_search_add_nodes(self):
         routes = self.routes[:self.max_vehicles]
 
-        aux = [[i.end.id_ for i in route.edges] for route in routes]
-        used_nodes = []
-        for i in aux:
-            used_nodes += i
-
-        nodes = [i for i in self.nodes if i.id_ not in used_nodes]
+        used_nodes = [[i.end.id for i in route.edges] for route in routes][0]
         for route in routes:
             improve = True
             while improve:
                 improve = False
                 last_node = route.edges[-1].start
-                selected = self.calculate_saving_from_last_node(last_node, nodes)
+                nodes = [i for i in self.nodes[1:-1] if i.id not in used_nodes]
+                selected = self.calculate_saving_from_last_node(last_node, nodes, route.distance)
                 if selected is not None:
                     improve = True
-                    nodes.append(selected)
-                    route.edges[-1] = Edge(last_node, selected)
-                    route.edges.append(Edge(selected, self.nodes[-1]))
+                    used_nodes.append(selected.id)
+                    new_node = Edge(last_node, selected)
+                    return_home = Edge(selected, self.nodes[-1])
+                    route.distance = (route.distance - route.edges[-1].distance + new_node.distance +
+                                      return_home.distance)
+                    route.edges[-1] = new_node
+                    route.edges.append(return_home)
 
     def static_algorithm(self):
         self.dummy_solution()
@@ -219,8 +220,9 @@ class Static:
         return self.routes, self.of
 
     def change_environment(self):
-        random.seed = self.seed
         self.seed += 1
+        random.seed = self.seed
+        np.seed = self.seed
         self.weather = random.randint(0, 1)
         self.congestion = {i: random.randint(0, 1) for i in range(len(self.nodes))}
 
@@ -247,7 +249,7 @@ class Static:
         return self.routes[:self.max_vehicles], self.of, dynamic_of
 
     def static_multi_start_iter(self, max_iter: int):
-        best_route, best_of = self.static_algorithm()
+        best_of = -1
         for _ in range(max_iter):
             self.reset()
             new_route, new_sol = self.static_algorithm()
@@ -261,3 +263,19 @@ class Static:
         self.static_multi_start_iter(max_iter)
         dynamic_of = self.dynamic_of()
         return self.routes[:self.max_vehicles], self.of, dynamic_of
+
+    def change_seed(self):
+        self.seed += random.randint(1000, 10000)
+        random.seed = self.seed
+        np.seed = self.seed
+
+    def run_multi_scenarios_static(self, max_iter):
+        routes, of_list, dynamic_of_list = [], [], []
+        for _ in range(self.max_iter_dynamic):
+            lista = self.run_multi_start_static(max_iter)
+            routes.append(lista[0])
+            of_list.append(lista[1])
+            dynamic_of_list.append(lista[2])
+            self.change_seed()
+
+        return routes, of_list, dynamic_of_list

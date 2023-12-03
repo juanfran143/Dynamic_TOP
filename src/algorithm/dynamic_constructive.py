@@ -1,10 +1,7 @@
 import copy
 from src.utils.classes import *
-import random as rnd
 import numpy as np
-import time
-from src.utils.Constants import Algorithm
-from statistics import mean
+
 
 class DynamicConstructive:
     """
@@ -32,7 +29,7 @@ class DynamicConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, wb=None,
-                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, select_saving_function=None, random_selection=2):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100):
         self.routes = []
         self.of = 0
 
@@ -46,34 +43,21 @@ class DynamicConstructive:
         self.max_dist = max_dist
         self.max_vehicles = max_vehicles
         self.neighbour_limit = neighbour_limit
-        # len(dict_of_types)
+
         self.n_types_nodes = n_types_nodes
 
         random.seed = self.seed
         self.weather = random.choice([-1, 1])
         self.congestion = {i: random.choice([-1, 1]) for i in range(len(nodes))}
         self.bb = bb
-        self.ts = wb # OnlineLogisticRegression(0.5, 1, 3)
+        self.ts = wb
         self.new_data = {i: [] for i in range(n_types_nodes)}
-        #self.X = np.array([])
-        #self.y = np.array([])
         self.max_iter_dynamic = max_iter_dynamic
 
         if dict_of_types:
             self.dict_of_types = dict_of_types
         else:
             self.dict_of_types = {i: 1 for i in range(len(nodes))}
-
-        self.random_selection = random_selection
-        # self.select_saving_function = self.saving_function(select_saving_function)
-
-    def saving_function(self, select_saving_function):
-        if select_saving_function == Algorithm.SELECT_SAVING_GREEDY:
-            return None
-        if select_saving_function == Algorithm.SELECT_SAVING_GRASP:
-            return None
-        if select_saving_function is None:
-            return None
 
     def reset(self):
         self.routes = []
@@ -172,73 +156,32 @@ class DynamicConstructive:
         self.routes = routes
         return sum(dynamic_reward[v] for v in range(self.max_vehicles))
 
-    def constructive_dynamic_algorithm(self):
-        of_list = []
-        for _ in range(0, 100):
-            dynamic_of = self.constructive_dynamic_solution()
-            of_list.append(dynamic_of)
-            for i in range(self.n_types_nodes):
-                data = self.new_data[i]
-                if len(data) > 0:
-                    x = np.array(data)[:, :3].reshape(-3, 3)
-                    y = np.array(data)[:, 3:]
-                    self.ts[i].fit(x, y)
-        print((mean(of_list)))
-        self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
-
-        return self.routes, self.of, dynamic_of
-
-    def dynamic_algorithm_real_time(self):
-        self.dummy_solution()
-        self.create_saving_list()
-        while len(self.savings) != 0:
-            self.merge_routes_real_time(self.select_saving_function(self))
-
-        self.routes.sort(key=lambda x: x.reward, reverse=True)
-        self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
-
-        return self.routes, self.of
-
     def change_environment(self):
         random.seed = self.seed
         self.seed += 1
         self.weather = random.choice([-1, 1])
         self.congestion = {i: random.choice([-1, 1])for i in range(len(self.nodes))}
 
-    def dynamic_of(self):
-        of_list = []
-        for _ in range(self.max_iter_dynamic):
-            of = 0
-            for r in self.routes[:self.max_vehicles]:
-                distance = 0
-                for e in r.edges[:-1]:
-                    self.change_environment()
-                    distance += e.distance
-                    has_reward = self.bb.simulate(self.dict_of_types[e.end.id], self.weather,
-                                                  self.congestion[e.end.id], ((distance / self.max_dist)-0.5)/2)
-                    of += e.end.reward * has_reward
+    def fit_wb(self):
+        for i in range(self.n_types_nodes):
+            data = self.new_data[i]
+            if len(data) > 0:
+                x = np.array(data)[:, :-1].reshape(-3, 3)
+                y = np.array(data)[:, -1]
+                self.ts[i].fit(x, y)
 
-            of_list.append(of)
-
-        return np.mean(of_list)
+    def change_seed(self):
+        self.seed += random.randint(1000, 10000)
+        random.seed = self.seed
+        np.seed = self.seed
 
     def run_dynamic(self):
-        self.dynamic_algorithm()
-        dynamic_of = self.dynamic_of()
-        return self.routes[:self.max_vehicles], self.of, dynamic_of
+        of_dynamic_list, of_list, route_list = [], [], []
+        for _ in range(self.max_iter_dynamic):
+            of_dynamic_list.append(self.constructive_dynamic_solution())
+            of_list.append(sum([self.routes[i].reward for i in range(self.max_vehicles)]))
+            route_list.append(copy.deepcopy(self.routes))
+            self.fit_wb()
+            self.change_seed()
 
-    def static_multi_start_iter(self, max_iter: int):
-        best_route, best_of = self.static_algorithm()
-        for _ in range(max_iter):
-            self.reset()
-            new_route, new_sol = self.static_algorithm()
-            if best_of < new_sol:
-                best_of = new_sol
-                best_route = copy.deepcopy(new_route)
-
-        self.routes = best_route
-
-    def run_multi_start_static(self, max_iter):
-        self.static_multi_start_iter(max_iter)
-        dynamic_of = self.dynamic_of()
-        return self.routes[:self.max_vehicles], self.of, dynamic_of
+        return route_list, of_list, of_dynamic_list

@@ -47,7 +47,8 @@ class Solution:
                        self.bb, self.dict_of_types, self.max_iter_dynamic,
                        select_saving_function=select_saving_function)
 
-            return s.run_multi_start_static(self.max_iter_random)
+            return s.run_multi_scenarios_static(self.max_iter_random)
+
         if algo == Algorithm.DYNAMIC:
             ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
             s = Dynamic(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
@@ -55,13 +56,14 @@ class Solution:
                         select_saving_function=select_saving_function)
 
             return s.run_multi_start_dynamic(10, self.max_iter_random)
+
         if algo == Algorithm.CONSTRUCTIVE_DYNAMIC:
             ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
             s = DynamicConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
                                     self.neighbour_limit, self.bb, ts, self.dict_of_types, instance[Key.N_TYPE_NODES],
-                                    self.max_iter_dynamic, select_saving_function=select_saving_function)
+                                    self.max_iter_dynamic)
 
-            return s.constructive_dynamic_algorithm()
+            return s.run_dynamic()
 
     def run_dynamic(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")
