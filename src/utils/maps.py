@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 class Map:
     def __init__(self, nodes):
         self.nodes = nodes
-        self.color_list = ["red", "blue", "green", "yellow"]
 
     def parse_connections(self, connections_str):
         parsed_connections = []
@@ -43,7 +42,7 @@ class Map:
         # Display the plot
         plt.show()
 
-    def print_route(self, route, show = "id"):
+    def print_route(self, route):
         print(route)
         fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -54,18 +53,13 @@ class Map:
             else:
                 circle = plt.Circle((node.x, node.y), 0.5, color='blue', fill=False)
             ax.add_patch(circle)
-            if show == "id":
-                ax.annotate(int(node.id), (node.x, node.y), color='red', ha='center', va='center')
-            if show == "reward":
-                ax.annotate(int(node.reward), (node.x, node.y), color='red', ha='center', va='center')
+            ax.annotate(int(node.id), (node.x, node.y), color='red', ha='center', va='center')
 
-        count = 0
         for team in route:
             for edge in team.edges:
                 start_node = edge.start
                 end_node = edge.end
-                plt.plot([start_node.x, end_node.x], [start_node.y, end_node.y], color=self.color_list[count])
-            count += 1
+                plt.plot([start_node.x, end_node.x], [start_node.y, end_node.y], color='green')
 
 
         # Set axis labels and title
