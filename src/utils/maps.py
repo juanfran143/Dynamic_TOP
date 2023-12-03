@@ -76,7 +76,6 @@ class Map:
         # Display the plot
         plt.show()
 
-
     def print_routes(self, routes):
         for route in routes:
             print(route)
