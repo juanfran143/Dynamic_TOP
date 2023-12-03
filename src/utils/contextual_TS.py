@@ -13,7 +13,7 @@ class ContextualMAB:
     def __init__(self):
         # we build two bandits
         self.weights = {}
-        self.weights[0] = [0, -0.8, -0.3, -1.5]
+        self.weights[0] = [0, -0.55, -0.2, -2]
         self.weights[1] = [0, -0.8, -0.3, -1.5]
 
     # method for acting on the bandits
@@ -35,6 +35,7 @@ class ContextualMAB:
         # give reward according to probability
         return np.random.choice([0, 1], p=[1 - prob_dict[k], prob_dict[k]]), max(prob_dict.values()) - prob_dict[k], \
         prob_dict[k]
+
     def prob(self, k, x):
         # probability dict
         prob_dict = {}
@@ -70,7 +71,7 @@ class OnlineLogisticRegression:
         self.q = np.ones(self.n_dim) * self.lambda_
 
         # initializing weights
-        self.w = np.random.normal(self.m, self.alpha * (self.q) ** (-1.0), size=self.n_dim)
+        self.w = np.random.normal(self.m, self.alpha * self.q ** (-1.0), size=self.n_dim)
 
     # the loss function
     def loss(self, w, *args):
@@ -93,7 +94,7 @@ class OnlineLogisticRegression:
         X = X.reshape(-3, 3)
         # step 1, find w
         self.w = minimize(self.loss, self.w, args=(X, y), jac=self.grad, method="L-BFGS-B",
-                          options={'maxiter': 20, 'disp': True}).x
+                          options={'maxiter': 20, 'disp': False}).x
         self.m = self.w
 
         # step 2, update q
@@ -122,7 +123,6 @@ class OnlineLogisticRegression:
         return np.array([1 - proba, proba]).T
 
 
-
 if __name__ == "__main__":
 
     # instance of our class
@@ -131,9 +131,9 @@ if __name__ == "__main__":
     cmab3 = ContextualMAB()
 
     #These are the 3 variables, if the range is positive, BAD
-    X1 = np.random.choice([-1, +1], size=10000)
-    X2 = np.random.choice([-1, +1], size=10000)
-    X3 = np.random.uniform(-1, 1, 10000)
+    X1 = np.random.choice([-1, +1], size=1000)
+    X2 = np.random.choice([-1, +1], size=1000)
+    X3 = np.random.uniform(-1, 1, 1000)
     X = np_combined_array = np.column_stack((X1, X2, X3))
     # cmb3.draw is to simulate in blacbox
     y = np.array([cmab3.draw(0, X[i])[0] for i in range(0, len(X1))])

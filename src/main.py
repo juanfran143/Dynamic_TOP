@@ -20,7 +20,7 @@ def neighbour(nodes, percentage):
 
 def create_instance(instance_dict):
     instance_dict[Key.NODES], instance_dict[Key.MAX_DIST], instance_dict[Key.MAX_VEHICLES] = read(instance_dict[Key.INSTANCE])
-    beta0, beta1, beta2, beta3 = Betas().MEDIUM
+    beta0, beta1, beta2, beta3 = Betas().MEDIUMTEST
     instance_dict[Key.BLACKBOX] = BlackBox()
     instance_dict[Key.BLACKBOX].setter_betas(beta0, beta1, beta2, beta3)
     instance_dict[Key.NEIGHBOUR_LIMIT] = neighbour(instance_dict[Key.NODES], instance_dict[Key.PERCENTAGE])
@@ -41,5 +41,5 @@ if __name__ == '__main__':
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
         results = solution.run(algo, selected_procedure, instance_dict)
         m = Map(instance_dict["nodes"])
-        m.print_route(results[0])
+        m.print_route(results[0],show="reward")
         print("OF: " + str(results[1]))

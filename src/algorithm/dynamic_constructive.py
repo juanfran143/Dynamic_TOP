@@ -4,7 +4,7 @@ import random as rnd
 import numpy as np
 import time
 from src.utils.Constants import Algorithm
-
+from statistics import mean
 
 class DynamicConstructive:
     """
@@ -32,7 +32,7 @@ class DynamicConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, wb=None,
-                 dict_of_types=None, max_iter_dynamic=100, select_saving_function=None, random_selection=2):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, select_saving_function=None, random_selection=2):
         self.routes = []
         self.of = 0
 
@@ -46,14 +46,17 @@ class DynamicConstructive:
         self.max_dist = max_dist
         self.max_vehicles = max_vehicles
         self.neighbour_limit = neighbour_limit
+        # len(dict_of_types)
+        self.n_types_nodes = n_types_nodes
 
         random.seed = self.seed
-        self.weather = random.randint(0, 1)
-        self.congestion = {i: random.randint(0, 1) for i in range(len(nodes))}
+        self.weather = random.choice([-1, 1])
+        self.congestion = {i: random.choice([-1, 1]) for i in range(len(nodes))}
         self.bb = bb
         self.ts = wb # OnlineLogisticRegression(0.5, 1, 3)
-        self.X = np.array([])
-        self.y = np.array([])
+        self.new_data = {i: [] for i in range(n_types_nodes)}
+        #self.X = np.array([])
+        #self.y = np.array([])
         self.max_iter_dynamic = max_iter_dynamic
 
         if dict_of_types:
@@ -62,7 +65,7 @@ class DynamicConstructive:
             self.dict_of_types = {i: 1 for i in range(len(nodes))}
 
         self.random_selection = random_selection
-        self.select_saving_function = self.saving_function(select_saving_function)
+        # self.select_saving_function = self.saving_function(select_saving_function)
 
     def saving_function(self, select_saving_function):
         if select_saving_function == Algorithm.SELECT_SAVING_GREEDY:
@@ -90,51 +93,9 @@ class DynamicConstructive:
             return False
         return True
 
-    def create_saving_list(self):
-        for i in range(len(self.nodes) - 2):
-            for j in range(len(self.nodes) - 2):
-                if i == j:
-                    continue
-                edge_a_b = Edge(self.nodes[i + 1], self.nodes[j + 1])
-                if not self.is_neighbour(edge_a_b):
-                    continue
-
-                edge_a_end = Edge(self.nodes[i + 1], self.nodes[-1])
-                edge_depot_b = Edge(self.nodes[0], self.nodes[j + 1])
-                
-                node_type_a = self.dict_of_types[self.nodes[i + 1]]
-                node_type_b = self.dict_of_types[self.nodes[j + 1]]
-                ts_sim_a = ts.simulate((node_type_a, self.weather, self.congestion[self.nodes[i + 1]], 1))
-                ts_sim_b = ts.simulate((node_type_b, self.weather, self.congestion[self.nodes[i + 1]], 1))
-                
-                saving_distance = self.alpha * (edge_a_end.distance + edge_depot_b.distance - edge_a_b.distance)
-                saving_reward = (1 - self.alpha) * (self.nodes[i + 1].reward * ts_sim_a + 
-                                                    self.nodes[j + 1].reward * ts_sim_b) 
-
-                self.savings.append(Saving(self.nodes[j + 1], self.nodes[i + 1], saving_distance + saving_reward,
-                                           edge_a_b.distance))
-
-        self.savings.sort(key=lambda x: x.saving)
-
-    def merge_routes(self, saving):
-        route_a = saving.start.route
-        route_b = saving.end.route
-        distance = route_a.distance + route_b.distance + saving.a_to_b - route_a.edges[-1].distance - route_b.edges[
-            0].distance
-        if route_a.id != route_b.id and route_a.edges[-1].start.id == saving.start.id and route_b.edges[
-            0].end.id == saving.end.id and distance <= self.max_dist:
-
-            route_a.edges.pop()
-            route_a.edges = route_a.edges + [Edge(saving.start, saving.end)] + route_b.edges[1:]
-            route_a.distance = distance
-            route_a.reward += route_b.reward
-            for i in route_b.edges[:-1]:
-                i.end.route = route_a
-
-            self.routes.pop(self.routes.index(route_b))
-
     def constructive_dynamic_solution(self):
         self.routes = {}
+        self.new_data = {i: [] for i in range(self.n_types_nodes)}
         nodes = copy.deepcopy(self.nodes)
 
         self.routes = {k: [nodes[0]] for k in range(self.max_vehicles)}
@@ -162,7 +123,7 @@ class DynamicConstructive:
 
                     node_type_b = self.dict_of_types[self.nodes[j + 1].id]
                     array_b = np.array((self.weather, self.congestion[self.nodes[j + 1].id],
-                                        1-(dist[v] + edge_depot_b.distance)/self.max_dist))
+                                        (((1-(dist[v] + edge_a_b.distance)/self.max_dist) - 0.5)*2)))
                     ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
 
                     saving_distance = self.alpha * edge_a_b.distance
@@ -184,9 +145,17 @@ class DynamicConstructive:
                     dist[v] += self.savings[0].a_to_b
                     node_id = self.savings[0].end.id
                     node_type = self.dict_of_types[node_id]
-                    has_reward = self.bb.simulate(node_type, 1-dist[v] / self.max_dist, self.weather,
-                                                  self.congestion[node_id])
-                    dynamic_reward[v] += self.savings[0].end.reward*has_reward
+
+                    weather = self.weather
+                    congestion = self.congestion[node_id]
+                    # transformed into (-1,1)
+                    battery = ((1-dist[v]/self.max_dist) - 0.5) * 2
+                    # print(weather,congestion,battery)
+                    has_reward = self.bb.simulate(node_type=node_type, weather=weather,
+                                                  congestion=congestion, battery=battery, verbose=False)
+                    new_row = np.array([weather, congestion, battery, has_reward])
+                    self.new_data[node_type].append(new_row)
+                    dynamic_reward[v] += self.savings[0].end.reward * has_reward
                 else:
                     last = Edge(self.routes[v][-1], self.nodes[-1])
                     self.routes[v].append(self.nodes[-1])
@@ -204,7 +173,17 @@ class DynamicConstructive:
         return sum(dynamic_reward[v] for v in range(self.max_vehicles))
 
     def constructive_dynamic_algorithm(self):
-        dynamic_of = self.constructive_dynamic_solution()
+        of_list = []
+        for _ in range(0, 100):
+            dynamic_of = self.constructive_dynamic_solution()
+            of_list.append(dynamic_of)
+            for i in range(self.n_types_nodes):
+                data = self.new_data[i]
+                if len(data) > 0:
+                    x = np.array(data)[:, :3].reshape(-3, 3)
+                    y = np.array(data)[:, 3:]
+                    self.ts[i].fit(x, y)
+        print((mean(of_list)))
         self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
 
         return self.routes, self.of, dynamic_of
@@ -223,8 +202,8 @@ class DynamicConstructive:
     def change_environment(self):
         random.seed = self.seed
         self.seed += 1
-        self.weather = random.randint(0, 1)
-        self.congestion = {i: random.randint(0, 1) for i in range(len(self.nodes))}
+        self.weather = random.choice([-1, 1])
+        self.congestion = {i: random.choice([-1, 1])for i in range(len(self.nodes))}
 
     def dynamic_of(self):
         of_list = []
@@ -235,8 +214,8 @@ class DynamicConstructive:
                 for e in r.edges[:-1]:
                     self.change_environment()
                     distance += e.distance
-                    has_reward = self.bb.simulate(self.dict_of_types[e.end.id], distance / self.max_dist, self.weather,
-                                                  self.congestion[e.end.id])
+                    has_reward = self.bb.simulate(self.dict_of_types[e.end.id], self.weather,
+                                                  self.congestion[e.end.id], ((distance / self.max_dist)-0.5)/2)
                     of += e.end.reward * has_reward
 
             of_list.append(of)
