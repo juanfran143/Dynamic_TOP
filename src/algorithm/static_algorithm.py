@@ -33,7 +33,7 @@ class Static:
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
                  dict_of_types=None,
-                 max_iter_dynamic=100, select_saving_function=None, random_selection=2):
+                 max_iter_dynamic=100, select_saving_function=None, random_selection=5):
         self.routes = []
         self.of = 0
 
@@ -148,19 +148,27 @@ class Static:
                         if j == i + 1:
                             original_edge = edges[i].distance + edges[j + 1].distance
                             proposal_edge = y_i.distance(z_j) + y_j.distance(x_i)
+
+                            if round(proposal_edge, 2) < round(original_edge, 2):
+                                improve = True
+                                edges[i] = Edge(x_i, y_j)
+                                edges[i + 1] = Edge(y_j, y_i)
+                                edges[j + 1] = Edge(y_i, z_j)
+                                route.distance = route.distance + proposal_edge - original_edge
+
                         else:
                             original_edge = edges[i].distance + edges[i + 1].distance + edges[j].distance + \
                                             edges[j + 1].distance
                             proposal_edge = y_i.distance(x_j) + y_i.distance(z_j) + y_j.distance(x_i) + \
                                             y_j.distance(z_i)
 
-                        if proposal_edge < original_edge:
-                            improve = True
-                            edges[i] = Edge(x_i, y_j)
-                            edges[i + 1] = Edge(y_j, z_i)
-                            edges[j] = Edge(x_j, y_i)
-                            edges[j + 1] = Edge(y_i, z_j)
-                            route.distance = route.distance + proposal_edge - original_edge
+                            if round(proposal_edge, 2) < round(original_edge, 2):
+                                improve = True
+                                edges[i] = Edge(x_i, y_j)
+                                edges[i + 1] = Edge(y_j, z_i)
+                                edges[j] = Edge(x_j, y_i)
+                                edges[j + 1] = Edge(y_i, z_j)
+                                route.distance = route.distance + proposal_edge - original_edge
 
     def calculate_saving_from_last_node(self, last_node, nodes, current_distance):
         """
@@ -250,7 +258,7 @@ class Static:
 
     def static_multi_start_iter(self, max_iter: int):
         best_of = -1
-        for _ in range(max_iter):
+        for iter in range(max_iter):
             self.reset()
             new_route, new_sol = self.static_algorithm()
             if best_of < new_sol:

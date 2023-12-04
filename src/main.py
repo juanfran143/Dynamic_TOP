@@ -41,7 +41,7 @@ if __name__ == '__main__':
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
         results = solution.run(algo, selected_procedure, instance_dict)
         m = Map(instance_dict["nodes"])
-        # m.print_routes(results[0])
+        # m.print_route(results[0][-1])
         print("Distance of each Route:")
         print([sum(e.distance for e in route) for route in results[0]])
         print("OF: " + str(results[1]))
