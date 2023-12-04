@@ -1,6 +1,7 @@
 import copy
 from src.utils.classes import *
 import numpy as np
+from sklearn.metrics import mean_squared_error, mean_absolute_error, log_loss, roc_auc_score, roc_curve
 
 
 class DynamicConstructive:
@@ -178,7 +179,7 @@ class DynamicConstructive:
     def check_wb(self):
         ts = []
         bb = []
-        for j in range(5):
+        for j in range(self.n_types_nodes):
             for weather in [-1, 1]:
                 for congestion in [-1, 1]:
                     for battery in range(-10, 10):
@@ -188,8 +189,12 @@ class DynamicConstructive:
                         bb.append(self.bb.simulate(node_type=node_type_b, weather=weather,
                                                    congestion=congestion, battery=battery, verbose=False))
 
-        print(ts)
-        print(bb)
+        # Cálculo de MSE, RMSE, MAE y Log-Loss
+        mse = mean_squared_error(ts, bb)
+        rmse = np.sqrt(mse)
+        mae = mean_absolute_error(ts, bb)
+
+        print(f"MSE: {mse}; RMSE: {rmse}; MAE: {mae}")
 
     def run_dynamic(self):
         of_dynamic_list, of_list, route_list = [], [], []
