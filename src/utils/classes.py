@@ -131,7 +131,7 @@ class BlackBox:
 
         return 1 / (1 + math.exp(-exponent))
 
-    def simulate(self, node_type, weather=0, congestion=0,battery=0, verbose=False):
+    def simulate(self, node_type, weather=0, congestion=0, battery=0, verbose=False):
         rand = random.random()
         if verbose:
             print("La probabilidad de la black box ha sido: " + str(self.get_value(node_type, weather, congestion, battery)))

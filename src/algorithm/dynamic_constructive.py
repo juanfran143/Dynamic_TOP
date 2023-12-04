@@ -179,20 +179,26 @@ class DynamicConstructive:
     def check_wb(self):
         ts = []
         bb = []
+        dic = {}
         for j in range(self.n_types_nodes):
             for weather in [-1, 1]:
                 for congestion in [-1, 1]:
                     for battery in range(-10, 10):
                         node_type_b = self.dict_of_types[self.nodes[j + 1].id]
                         array_b = np.array((weather, congestion, battery / 10))
-                        ts.append(round(self.ts[node_type_b].predict_proba(array_b, 'sample')[0], 2))
-                        bb.append(self.bb.simulate(node_type=node_type_b, weather=weather,
-                                                   congestion=congestion, battery=battery, verbose=False))
+                        ts_value = round(self.ts[node_type_b].predict_proba(array_b, 'sample')[0], 2)
+                        bb_value = self.bb.simulate(node_type=node_type_b, weather=weather,
+                                                    congestion=congestion, battery=battery, verbose=False)
+                        ts.append(ts_value)
+                        bb.append(bb_value)
+                        dic[(weather, congestion, battery / 10)] = (ts_value, bb_value)
 
         # Cálculo de MSE, RMSE, MAE y Log-Loss
         mse = mean_squared_error(ts, bb)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(ts, bb)
+
+        print(dic)
 
         print(f"MSE: {mse}; RMSE: {rmse}; MAE: {mae}")
 

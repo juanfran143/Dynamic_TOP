@@ -8,7 +8,7 @@ import random
 # This is the blackbox class, bandidts = types
 class ContextualMAB:
 
-#!!!! INTERCEPT ==0 !!!!
+#!!!! INTERCEpT ==0 !!!!
     # initialization
     def __init__(self):
         # we build two bandits
@@ -75,37 +75,37 @@ class OnlineLogisticRegression:
 
     # the loss function
     def loss(self, w, *args):
-        X, y = args
+        x, y = args
         return 0.5 * (self.q * (w - self.m)).dot(w - self.m) + np.sum(
-            [np.log(1 + np.exp(-y[j] * w.dot(X[j]))) for j in range(y.shape[0])])
+            [np.log(1 + np.exp(-y[j] * w.dot(x[j]))) for j in range(y.shape[0])])
 
     # the gradient
     def grad(self, w, *args):
-        X, y = args
+        x, y = args
         return self.q * (w - self.m) + (-1) * np.array(
-            [y[j] * X[j] / (1. + np.exp(y[j] * w.dot(X[j]))) for j in range(y.shape[0])]).sum(axis=0)
+            [y[j] * x[j] / (1. + np.exp(y[j] * w.dot(x[j]))) for j in range(y.shape[0])]).sum(axis=0)
 
     # method for sampling weights
     def get_weights(self):
         return np.random.normal(self.m, self.alpha * (self.q) ** (-1.0), size=self.n_dim)
 
     # fitting method
-    def fit(self, X, y):
-        X = X.reshape(-3, 3)
+    def fit(self, x, y):
+        x = x.reshape(-3, 3)
         # step 1, find w
-        self.w = minimize(self.loss, self.w, args=(X, y), jac=self.grad, method="L-BFGS-B",
+        self.w = minimize(self.loss, self.w, args=(x, y), jac=self.grad, method="L-BFGS-B",
                           options={'maxiter': 20, 'disp': False}).x
         self.m = self.w
 
         # step 2, update q
-        P = (1 + np.exp(1 - X.dot(self.m))) ** (-1)
-        self.q = self.q + (P * (1 - P)).dot(X ** 2)
+        p = (1 + np.exp(1 - x.dot(self.m))) ** (-1)
+        self.q = self.q + (p * (1 - p)).dot(x ** 2)
 
     # probability output method, using weights sample
-    def predict_proba(self, X, mode='sample'):
+    def predict_proba(self, x, mode='sample'):
 
-        # adding intercept to X
-        # X = add_constant(X)
+        # adding intercept to x
+        # x = add_constant(x)
 
         # sampling weights after update
         self.w = self.get_weights()
@@ -119,7 +119,7 @@ class OnlineLogisticRegression:
             raise Exception('mode not recognized!')
 
         # calculating probabilities
-        proba = 1 / (1 + np.exp(-1 * X.dot(w)))
+        proba = 1 / (1 + np.exp(-1 * x.dot(w)))
         return np.array([1 - proba, proba]).T
 
 
@@ -131,17 +131,17 @@ if __name__ == "__main__":
     cmab3 = ContextualMAB()
 
     #These are the 3 variables, if the range is positive, BAD
-    X1 = np.random.choice([-1, +1], size=1000)
-    X2 = np.random.choice([-1, +1], size=1000)
-    X3 = np.random.uniform(-1, 1, 1000)
-    X = np_combined_array = np.column_stack((X1, X2, X3))
+    x1 = np.random.choice([-1, +1], size=1000)
+    x2 = np.random.choice([-1, +1], size=1000)
+    x3 = np.random.uniform(-1, 1, 1000)
+    x = np_combined_array = np.column_stack((x1, x2, x3))
     # cmb3.draw is to simulate in blacbox
-    y = np.array([cmab3.draw(0, X[i])[0] for i in range(0, len(X1))])
+    y = np.array([cmab3.draw(0, x[i])[0] for i in range(0, len(x1))])
 
 
     # OLR object
     online_lrn3 = OnlineLogisticRegression(0.5, 1, 3)
-    x_res = X.reshape(-3, 3)
+    x_res = x.reshape(-3, 3)
     #start = time.time()
     online_lrn3.fit(x_res, y)
     #end = time.time()
@@ -149,10 +149,10 @@ if __name__ == "__main__":
 
     # Now test the capacity of prediction with a sample of 10
 
-    X1 = np.random.choice([-1, 1], size=10)
-    X2 = np.random.choice([-1, 1], size=10)
-    X3 = np.random.uniform(-1, 1, 10)
-    X = np_combined_array = np.column_stack((X1, X2, X3))
-    yprueba = np.array([cmab3.prob(0, X[i]) for i in range(0, len(X1))])
+    x1 = np.random.choice([-1, 1], size=10)
+    x2 = np.random.choice([-1, 1], size=10)
+    x3 = np.random.uniform(-1, 1, 10)
+    x = np_combined_array = np.column_stack((x1, x2, x3))
+    yprueba = np.array([cmab3.prob(0, x[i]) for i in range(0, len(x1))])
     print(yprueba)
-    print(online_lrn3.predict_proba(X,"sample"))
+    print(online_lrn3.predict_proba(x,"sample"))
