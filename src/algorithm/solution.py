@@ -3,6 +3,7 @@ from src.utils.Constants import Algorithm, Key
 from src.utils.contextual_TS import OnlineLogisticRegression
 from src.algorithm.dynamic import *
 from src.algorithm.dynamic_constructive import DynamicConstructive
+from src.algorithm.static_constructive import StaticConstructive
 
 
 class Solution:
@@ -64,6 +65,13 @@ class Solution:
                                     self.max_iter_dynamic)
 
             return s.run_dynamic()
+
+        if algo == Algorithm.CONSTRUCTIVE_STATIC:
+            s = StaticConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
+                                   self.neighbour_limit, self.bb, self.dict_of_types, instance[Key.N_TYPE_NODES],
+                                   self.max_iter_dynamic)
+
+            return s.run_static_constructive()
 
     def run_dynamic(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")

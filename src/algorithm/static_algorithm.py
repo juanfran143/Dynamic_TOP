@@ -194,7 +194,7 @@ class Static:
         return first_element[0]
 
     def local_search_add_nodes(self):
-        routes = self.routes[:self.max_vehicles]
+        routes = self.routes[:min(self.max_vehicles, len(self.routes))]
 
         used_nodes = [[i.end.id for i in route.edges] for route in routes][0]
         for route in routes:
@@ -223,7 +223,7 @@ class Static:
         self.routes.sort(key=lambda x: x.reward, reverse=True)
         self.local_search_same_route()
         self.local_search_add_nodes()
-        self.of = sum([self.routes[i].reward for i in range(self.max_vehicles)])
+        self.of = sum([self.routes[i].reward for i in range(min(self.max_vehicles, len(self.routes)))])
 
         return self.routes, self.of
 
@@ -238,7 +238,7 @@ class Static:
         of_list = []
         for _ in range(self.max_iter_dynamic):
             of = 0
-            for r in self.routes[:self.max_vehicles]:
+            for r in self.routes[:min(self.max_vehicles, len(self.routes))]:
                 distance = 0
                 for e in r.edges[:-1]:
                     self.change_environment()
@@ -254,7 +254,7 @@ class Static:
     def run_static(self):
         self.static_algorithm()
         dynamic_of = self.dynamic_of()
-        return self.routes[:self.max_vehicles], self.of, dynamic_of
+        return self.routes[:min(self.max_vehicles, len(self.routes))], self.of, dynamic_of
 
     def static_multi_start_iter(self, max_iter: int):
         best_of = -1
@@ -270,7 +270,7 @@ class Static:
     def run_multi_start_static(self, max_iter):
         self.static_multi_start_iter(max_iter)
         dynamic_of = self.dynamic_of()
-        return self.routes[:self.max_vehicles], self.of, dynamic_of
+        return self.routes[:min(self.max_vehicles, len(self.routes))], self.of, dynamic_of
 
     def change_seed(self):
         self.seed += random.randint(1000, 10000)

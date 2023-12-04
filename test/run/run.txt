@@ -1,4 +1,6 @@
 #Instance   seed    max_iter_dynamic    max_time     Algorithm   selected_random_node    Beta    max_iter_random alpha   percentage  n_type_nodes
+tsiligirides_problem_1_budget_85.txt;2523461;100;1;CONSTRUCTIVE_DYNAMIC;GRASP;MEDIUMTEST;1000;0.7;0.5;2
+tsiligirides_problem_1_budget_85.txt;2523461;100;1;CONSTRUCTIVE_STATIC;GRASP;MEDIUMTEST;1000;0.7;0.5;2
 tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;0;0.5;2
 tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;0.1;0.5;2
 tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;0.2;0.5;2
@@ -10,4 +12,4 @@ tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;0.
 tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;0.8;0.5;2
 tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;0.9;0.5;2
 tsiligirides_problem_1_budget_85.txt;2523461;1;1;STATIC;GRASP;MEDIUMTEST;1000;1;0.5;2
-tsiligirides_problem_1_budget_85.txt;2523461;1;1;CONSTRUCTIVE_DYNAMIC;GRASP;MEDIUMTEST;1000;0.7;0.5;2
+
