@@ -1,6 +1,7 @@
 import copy
 from src.utils.classes import *
 import numpy as np
+from math import log
 
 
 class StaticConstructive:
@@ -29,7 +30,7 @@ class StaticConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
-                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, beta=0.8):
         self.routes = []
         self.of = 0
 
@@ -40,6 +41,7 @@ class StaticConstructive:
         self.nodes = nodes
         self.savings = []
         self.alpha = alpha
+        self.beta = beta
         self.max_dist = max_dist
         self.max_vehicles = max_vehicles
         self.neighbour_limit = neighbour_limit
@@ -68,6 +70,13 @@ class StaticConstructive:
         if edge.distance > self.neighbour_limit:
             return False
         return True
+
+    def get_saving_greedy(self):
+        return self.savings.pop(0)
+
+    def get_saving_bias(self):
+        index = int((log(np.random.random()) / log(1 - self.beta))) % len(self.savings)
+        return self.savings.pop(index)
 
     def constructive_static_solution(self):
         self.routes = {}
@@ -109,12 +118,13 @@ class StaticConstructive:
                     self.savings.sort(key=lambda x: x.saving)
 
                 if len(self.savings) != 0:
-                    self.routes[v].append(self.savings[0].end)
-                    nodes_used.append(self.savings[0].end.id)
+                    saving = self.get_saving_bias()
+                    self.routes[v].append(saving.end)
+                    nodes_used.append(saving.end.id)
 
-                    reward[v] += self.savings[0].end.reward
-                    dist[v] += self.savings[0].a_to_b
-                    node_id = self.savings[0].end.id
+                    reward[v] += saving.end.reward
+                    dist[v] += saving.a_to_b
+                    node_id = saving.end.id
                     node_type = self.dict_of_types[node_id]
 
                     weather = self.weather
@@ -126,13 +136,11 @@ class StaticConstructive:
                                                   congestion=congestion, battery=battery, verbose=False)
                     new_row = np.array([weather, congestion, battery, has_reward])
                     self.new_data[node_type].append(new_row)
-                    dynamic_reward[v] += self.savings[0].end.reward * has_reward
+                    dynamic_reward[v] += saving.end.reward * has_reward
                 else:
                     last = Edge(self.routes[v][-1], self.nodes[-1])
                     self.routes[v].append(self.nodes[-1])
                     dist[v] += last.distance
-                # TODO: Meter LS
-                self.change_environment()
 
         routes = []
         for k, v in self.routes.items():
@@ -144,6 +152,90 @@ class StaticConstructive:
         self.routes = routes
         return sum(dynamic_reward[v] for v in range(self.max_vehicles))
 
+    def local_search_same_route(self):
+        """
+        En el determinista no tiene sentido, pero en el simheurístico sí.
+        :return:
+        """
+        # 0-6-30-17-19-32
+        for route in self.routes:
+            improve = True
+            while improve:
+                improve = False
+                edges = route.edges
+                for i in range(len(route.edges) - 2):
+                    for j in range(i + 1, len(route.edges) - 1):
+                        x_i, y_i, z_i = edges[i].start, edges[i].end, edges[i + 1].end
+                        x_j, y_j, z_j = edges[j].start, edges[j].end, edges[j + 1].end
+                        if j == i + 1:
+                            original_edge = edges[i].distance + edges[j + 1].distance
+                            proposal_edge = y_i.distance(z_j) + y_j.distance(x_i)
+
+                            if round(proposal_edge, 2) < round(original_edge, 2):
+                                improve = True
+                                edges[i] = Edge(x_i, y_j)
+                                edges[i + 1] = Edge(y_j, y_i)
+                                edges[j + 1] = Edge(y_i, z_j)
+                                route.distance = route.distance + proposal_edge - original_edge
+
+                        else:
+                            original_edge = edges[i].distance + edges[i + 1].distance + edges[j].distance + \
+                                            edges[j + 1].distance
+                            proposal_edge = y_i.distance(x_j) + y_i.distance(z_j) + y_j.distance(x_i) + \
+                                            y_j.distance(z_i)
+
+                            if round(proposal_edge, 2) < round(original_edge, 2):
+                                improve = True
+                                edges[i] = Edge(x_i, y_j)
+                                edges[i + 1] = Edge(y_j, z_i)
+                                edges[j] = Edge(x_j, y_i)
+                                edges[j + 1] = Edge(y_i, z_j)
+                                route.distance = route.distance + proposal_edge - original_edge
+
+    def calculate_saving_from_last_node(self, last_node, nodes, current_distance):
+        """
+        Calculate if possible and return the one with the best "saving"
+        :param current_distance:
+        :param last_node: Last node visited
+        :param nodes: Nodes not used in the solution
+        :return:
+        """
+        end_point = self.nodes[-1]
+        saving = {}
+        for node in nodes:
+            distance = last_node.distance(node)
+            if distance + node.distance(end_point) + current_distance > self.max_dist:
+                continue
+            saving[node] = distance + node.reward
+
+        if len(saving) == 0:
+            return None
+
+        sorted_d = dict(sorted(saving.items(), key=lambda item: item[1], reverse=True))
+        first_element = next(iter(sorted_d.items()))
+        return first_element[0]
+
+    def local_search_add_nodes(self):
+        routes = self.routes[:min(self.max_vehicles, len(self.routes))]
+
+        used_nodes = [[i.end.id for i in route.edges] for route in routes][0]
+        for route in routes:
+            improve = True
+            while improve:
+                improve = False
+                last_node = route.edges[-1].start
+                nodes = [i for i in self.nodes[1:-1] if i.id not in used_nodes]
+                selected = self.calculate_saving_from_last_node(last_node, nodes, route.distance)
+                if selected is not None:
+                    improve = True
+                    used_nodes.append(selected.id)
+                    new_node = Edge(last_node, selected)
+                    return_home = Edge(selected, self.nodes[-1])
+                    route.distance = (route.distance - route.edges[-1].distance + new_node.distance +
+                                      return_home.distance)
+                    route.edges[-1] = new_node
+                    route.edges.append(return_home)
+
     def change_environment(self):
         random.seed = self.seed
         self.seed += 1
@@ -151,14 +243,42 @@ class StaticConstructive:
         self.congestion = {i: random.choice([-1, 1])for i in range(len(self.nodes))}
 
     def change_seed(self):
-        self.seed += random.randint(1000, 10000)
+        self.seed += 10000
         random.seed = self.seed
         np.seed = self.seed
 
-    def run_static_constructive(self):
+    def dynamic_of(self):
+        dynamic_of = 0
+        for r in self.routes[:min(self.max_vehicles, len(self.routes))]:
+            distance = 0
+            for e in r.edges[:-1]:
+                distance += e.distance
+                has_reward = self.bb.simulate(self.dict_of_types[e.end.id], distance / self.max_dist, self.weather,
+                                              self.congestion[e.end.id])
+                dynamic_of += e.end.reward * has_reward
+                self.change_environment()
+
+        return dynamic_of
+
+    def static_solution(self, max_iter):
+        best_of = -1
+        best_route = []
+        for _ in range(max_iter):
+            self.constructive_static_solution()
+            self.local_search_same_route()
+            self.local_search_add_nodes()
+            of_list = sum([self.routes[i].reward for i in range(self.max_vehicles)])
+            if best_of < of_list:
+                best_of = of_list
+                best_route = copy.deepcopy(self.routes)
+
+        self.routes = best_route
+
+    def run_static_constructive(self, max_iter):
         of_dynamic_list, of_list, route_list = [], [], []
         for _ in range(self.max_iter_dynamic):
-            of_dynamic_list.append(self.constructive_static_solution())
+            self.static_solution(max_iter)
+            of_dynamic_list.append(self.dynamic_of())
             of_list.append(sum([self.routes[i].reward for i in range(self.max_vehicles)]))
             route_list.append(copy.deepcopy(self.routes))
             self.change_seed()

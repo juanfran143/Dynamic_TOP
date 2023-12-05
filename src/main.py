@@ -1,6 +1,8 @@
+import numpy as np
+
 from src.utils.read_inputs import read, read_run
 from src.utils.Constants import *
-from src.utils.Maps import *
+from src.utils.maps import *
 from src.utils.classes import *
 from src.algorithm.solution import Solution
 
@@ -36,14 +38,20 @@ if __name__ == '__main__':
     instance = read_run()
     for instance_dict in instance:
         solution, instance_dict = create_instance(instance_dict)
-        print(instance_dict[Key.ALGORITHM])
+        # print(instance_dict[Key.ALGORITHM])
         algo = instance_dict[Key.ALGORITHM]
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
         results = solution.run(algo, selected_procedure, instance_dict)
         m = Map(instance_dict["nodes"])
         # m.print_route(results[0][-1])
+        """
         print("Distance of each Route:")
         print([sum(e.distance for e in route) for route in results[0]])
         print("OF: " + str(results[1]))
         print("Dynamic OF: " + str(results[2]))
+        print()
+        """
+        print(instance_dict[Key.ALGORITHM])
+        print("Mean OF: " + str(np.mean(results[1])))
+        print("Mean Dynamic OF: " + str(np.mean(results[2])))
         print()

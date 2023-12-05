@@ -1,0 +1,15 @@
+{
+  "I1": {
+    "Instance": "tsiligirides_problem_1_budget_80.txt",
+    "seed": 2354568,
+    "max_iter_dynamic": 1000,
+    "max_time": 10,
+    "Algorithm": "CONSTRUCTIVE_DYNAMIC",
+    "selected_random_node": "GRASP",
+    "Beta": "MEDIUMTEST",
+    "max_iter_random": 10,
+    "alpha": 0.5,
+    "percentage": 0.5,
+    "n_type_nodes": 5
+  }
+}

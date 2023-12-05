@@ -71,7 +71,7 @@ class Solution:
                                    self.neighbour_limit, self.bb, self.dict_of_types, instance[Key.N_TYPE_NODES],
                                    self.max_iter_dynamic)
 
-            return s.run_static_constructive()
+            return s.run_static_constructive(100)
 
     def run_dynamic(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")
