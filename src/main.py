@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 
 from src.utils.read_inputs import read, read_run
@@ -34,6 +36,33 @@ def create_instance(instance_dict):
     return Solution(**filtered_args), instance_dict
 
 
+def save_reduced_information_to_txt(info, mean_of, mean_dynamic_of, time, filename="..\\output\\output.txt"):
+    """
+    Saves reduced information along with additional mean values to a text file, excluding certain keys.
+
+    :param info: Dictionary containing the main information to be saved.
+    :param mean_of: Mean value to be saved under the key 'mean_of'.
+    :param mean_dynamic_of: Mean dynamic value to be saved under the key 'mean_dynamic_of'.
+    :param filename: Name of the file to save the information to. Defaults to 'output.txt'.
+    """
+    # Keys to be excluded from saving
+    keys_to_exclude = ['bb', 'nodes', 'dict_of_types', 'neighbour_limit']
+
+    # Removing the specified keys from the dictionary
+    reduced_info = {k: v for k, v in info.items() if k not in keys_to_exclude}
+
+    # Adding mean values to the reduced information dictionary
+    reduced_info['time'] = time
+    reduced_info['mean_of'] = mean_of
+    reduced_info['mean_dynamic_of'] = mean_dynamic_of
+
+    values_to_save = [v for k, v in reduced_info.items()]
+
+    # Creating a new file or appending to an existing file
+    with open(filename, "a") as file:
+        file.write(";".join(map(str, values_to_save)) + "\n")
+
+
 if __name__ == '__main__':
     instance = read_run()
     for instance_dict in instance:
@@ -41,16 +70,10 @@ if __name__ == '__main__':
         # print(instance_dict[Key.ALGORITHM])
         algo = instance_dict[Key.ALGORITHM]
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
+        start = time.time()
         results = solution.run(algo, selected_procedure, instance_dict)
-        m = Map(instance_dict["nodes"])
-        # m.print_route(results[0][-1])
-        """
-        print("Distance of each Route:")
-        print([sum(e.distance for e in route) for route in results[0]])
-        print("OF: " + str(results[1]))
-        print("Dynamic OF: " + str(results[2]))
-        print()
-        """
+        save_reduced_information_to_txt(instance_dict, np.mean(results[1]), np.mean(results[2]), time.time()-start)
+
         print(instance_dict[Key.ALGORITHM])
         print("Mean OF: " + str(np.mean(results[1])))
         print("Mean Dynamic OF: " + str(np.mean(results[2])))
