@@ -210,6 +210,6 @@ class DynamicConstructive:
             route_list.append(copy.deepcopy(self.routes))
             self.fit_wb()
             self.change_seed()
-        self.check_wb()
+        # self.check_wb()
 
         return route_list, of_list, of_dynamic_list

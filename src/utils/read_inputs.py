@@ -77,4 +77,4 @@ def read(name):
     nodes.append(nodes[1])
     nodes.pop(1)
 
-    return nodes, int(capacity), int(vehicles)
+    return nodes, float(capacity), int(vehicles)
