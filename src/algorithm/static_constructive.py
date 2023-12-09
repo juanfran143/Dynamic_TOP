@@ -290,8 +290,8 @@ class StaticConstructive:
 
     def run_static_constructive(self, max_iter):
         of_dynamic_list, of_list, route_list = [], [], []
+        self.static_solution(max_iter)
         for _ in range(self.max_iter_dynamic):
-            self.static_solution(max_iter)
             of_dynamic_list.append(self.dynamic_of())
             of_list.append(sum([self.routes[i].reward for i in range(self.max_vehicles)]))
             route_list.append(copy.deepcopy(self.routes))

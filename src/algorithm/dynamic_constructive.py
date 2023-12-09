@@ -89,6 +89,9 @@ class DynamicConstructive:
         reward = {k: 0 for k in range(self.max_vehicles)}
         dynamic_reward = {k: 0 for k in range(self.max_vehicles)}
         nodes_used = []
+
+        max_distance = max([i.distance(j) for i in self.nodes for j in self.nodes])
+        max_reward = max([i.reward for i in self.nodes])
         while sum(end.values()) != len(end):
             for v in range(self.max_vehicles):
                 if end[v]:
@@ -110,9 +113,13 @@ class DynamicConstructive:
                     array_b = np.array((self.weather, self.congestion[self.nodes[j + 1].id],
                                         (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2)))
                     ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
-
-                    saving_distance = self.alpha * edge_a_b.distance
-                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward * ts_sim_b[0])
+                    """
+                    bb_sim_b = self.bb.get_value(node_type_b,  self.weather, self.congestion[self.nodes[j + 1].id], 
+                                                 (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2))
+                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * bb_sim_b)
+                    """
+                    saving_distance = self.alpha * edge_a_b.distance/max_distance
+                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * ts_sim_b[0])
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
                                                edge_a_b.distance))
@@ -210,6 +217,6 @@ class DynamicConstructive:
             route_list.append(copy.deepcopy(self.routes))
             self.fit_wb()
             self.change_seed()
-        # self.check_wb()
+        self.check_wb()
 
         return route_list, of_list, of_dynamic_list
