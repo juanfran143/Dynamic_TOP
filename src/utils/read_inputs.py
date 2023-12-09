@@ -61,8 +61,9 @@ def read(name):
     f = open(instances_directory + "\\" + name, "r")
     f1 = open(instances_directory + "\\" + name, "r")
     a = f1.read()
-
-    capacity, vehicles = f.readline()[:-1].split("\t")
+    f.readline()
+    vehicles = f.readline()[:-1].split(" ")[1]
+    capacity = f.readline()[:-1].split(" ")[1]
     aux = f.readline()[:-1].split("\t")
     nodes.append(Node(0, 0, float(aux[0]), float(aux[1])))
 
