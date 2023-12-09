@@ -2,6 +2,7 @@ import copy
 from src.utils.classes import *
 import numpy as np
 from math import log
+from src.utils.Constants import Algorithm
 
 
 class StaticConstructive:
@@ -30,7 +31,7 @@ class StaticConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
-                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, beta=0.8):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, beta=0.8, select_saving_function=None):
         self.routes = []
         self.of = 0
 
@@ -59,6 +60,19 @@ class StaticConstructive:
             self.dict_of_types = dict_of_types
         else:
             self.dict_of_types = {i: 1 for i in range(len(nodes))}
+
+        self.select_saving_function = self.saving_function(select_saving_function)
+
+    def saving_function(self, select_saving_function):
+        if select_saving_function == Algorithm.SELECT_SAVING_GREEDY:
+            return self.select_saving_greedy
+        if select_saving_function == Algorithm.SELECT_SAVING_GRASP:
+            return self.get_saving_bias
+        if select_saving_function is None:
+            return self.get_saving_bias
+
+    def select_saving_greedy(self):
+        return self.savings.pop(0)
 
     def reset(self):
         self.routes = []
@@ -118,7 +132,7 @@ class StaticConstructive:
                     self.savings.sort(key=lambda x: x.saving)
 
                 if len(self.savings) != 0:
-                    saving = self.get_saving_bias()
+                    saving = self.select_saving_function()
                     self.routes[v].append(saving.end)
                     nodes_used.append(saving.end.id)
 
@@ -206,7 +220,7 @@ class StaticConstructive:
             distance = last_node.distance(node)
             if distance + node.distance(end_point) + current_distance > self.max_dist:
                 continue
-            saving[node] = distance + node.reward
+            saving[node] = self.alpha * distance + (1-self.alpha) * node.reward
 
         if len(saving) == 0:
             return None

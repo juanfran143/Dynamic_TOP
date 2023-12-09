@@ -10,9 +10,11 @@ class Solution:
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
                  dict_of_types=None,
-                 max_iter_dynamic=100, max_iter_random=100):
+                 max_iter_dynamic=100, max_iter_random=100, beta_bias=0.8):
         self.routes = []
         self.of = 0
+
+        self.beta_bias = beta_bias
 
         self.max_iter_random = max_iter_random
         self.seed = seed
@@ -69,9 +71,10 @@ class Solution:
         if algo == Algorithm.CONSTRUCTIVE_STATIC:
             s = StaticConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
                                    self.neighbour_limit, self.bb, self.dict_of_types, instance[Key.N_TYPE_NODES],
-                                   self.max_iter_dynamic)
+                                   self.max_iter_dynamic, beta=self.beta_bias,
+                                   select_saving_function=select_saving_function)
 
-            return s.run_static_constructive(100)
+            return s.run_static_constructive(instance["max_iter_random"])
 
     def run_dynamic(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")

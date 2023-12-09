@@ -52,6 +52,7 @@ class Key:
     NEIGHBOUR_LIMIT = "neighbour_limit"
     DICT_OF_TYPE = "dict_of_types"
     N_TYPE_NODES = "n_type_nodes"
+    BETA_BIAS = "beta_bias"
     PERCENTAGE = "percentage"
     SEED = "seed"
     ALPHA = "alpha"

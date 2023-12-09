@@ -48,7 +48,8 @@ def read_run(name="run.txt"):
                 Key.MAX_ITER_RANDOM: int(parts[7]),
                 Key.ALPHA: float(parts[8]),
                 Key.PERCENTAGE: float(parts[9]),
-                Key.N_TYPE_NODES: int(parts[10])
+                Key.N_TYPE_NODES: int(parts[10]),
+                Key.BETA_BIAS: float(parts[11])
             })
 
     return data_dict
@@ -64,8 +65,11 @@ def read(name):
     capacity, vehicles = f.readline()[:-1].split("\t")
     aux = f.readline()[:-1].split("\t")
     nodes.append(Node(0, 0, float(aux[0]), float(aux[1])))
+
+    """
     aux = f.readline()[:-1].split("\t")
     nodes.append(Node(a.count("\n"), 0, float(aux[0]), float(aux[1])))
+    """
 
     aux = f.readline()[:-1].split("\t")
     i = 1
@@ -73,8 +77,11 @@ def read(name):
         nodes.append(Node(i, float(aux[2]), float(aux[0]), float(aux[1])))
         i += 1
         aux = f.readline()[:-1].split("\t")
-
+    """
     nodes.append(nodes[1])
     nodes.pop(1)
+    """
+    # aux = f.readline()[:-1].split("\t")
+    # nodes.append(Node(a.count("\n"), 0, float(aux[0]), float(aux[1])))
 
     return nodes, float(capacity), int(vehicles)
