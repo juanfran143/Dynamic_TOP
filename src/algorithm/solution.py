@@ -3,6 +3,7 @@ from src.utils.Constants import Algorithm, Key
 from src.utils.contextual_TS import OnlineLogisticRegression
 from src.algorithm.dynamic import *
 from src.algorithm.dynamic_constructive import DynamicConstructive
+from src.algorithm.dynamic_with_bb import DynamicConstructiveBB
 from src.algorithm.static_constructive import StaticConstructive
 
 
@@ -10,7 +11,7 @@ class Solution:
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
                  dict_of_types=None,
-                 max_iter_dynamic=100, max_iter_random=100, beta_bias=0.8):
+                 max_iter_dynamic=100, max_iter_random=100, beta_bias=0.8, standard=True):
         self.routes = []
         self.of = 0
 
@@ -35,6 +36,8 @@ class Solution:
             self.dict_of_types = dict_of_types
         else:
             self.dict_of_types = {i: 1 for i in range(len(nodes))}
+
+        self.standard = standard
 
     def reset(self):
         self.routes = []
@@ -64,7 +67,7 @@ class Solution:
             ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
             s = DynamicConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
                                     self.neighbour_limit, self.bb, ts, self.dict_of_types, instance[Key.N_TYPE_NODES],
-                                    self.max_iter_dynamic)
+                                    self.max_iter_dynamic, self.standard)
 
             return s.run_dynamic()
 
@@ -72,9 +75,17 @@ class Solution:
             s = StaticConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
                                    self.neighbour_limit, self.bb, self.dict_of_types, instance[Key.N_TYPE_NODES],
                                    self.max_iter_dynamic, beta=self.beta_bias,
-                                   select_saving_function=select_saving_function)
+                                   select_saving_function=select_saving_function, standard=self.standard)
 
             return s.run_static_constructive(instance["max_iter_random"])
+
+        if algo == Algorithm.CONSTRUCTIVE_DYNAMIC_BB:
+            ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
+            s = DynamicConstructiveBB(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
+                                      self.neighbour_limit, self.bb, ts, self.dict_of_types, instance[Key.N_TYPE_NODES],
+                                      self.max_iter_dynamic, self.standard)
+
+            return s.run_dynamic_bb()
 
     def run_dynamic(self):
         raise NotImplementedError("La subclase debe implementar este método abstracto")

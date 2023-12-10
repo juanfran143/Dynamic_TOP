@@ -31,10 +31,12 @@ class StaticConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None,
-                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, beta=0.8, select_saving_function=None):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, beta=0.8, select_saving_function=None,
+                 standard=True):
         self.routes = []
         self.of = 0
 
+        self.standard = standard
         self.seed = seed
         random.seed = seed
         np.seed = seed
@@ -103,6 +105,13 @@ class StaticConstructive:
         reward = {k: 0 for k in range(self.max_vehicles)}
         dynamic_reward = {k: 0 for k in range(self.max_vehicles)}
         nodes_used = []
+
+        max_distance = 1
+        max_reward = 1
+        if self.standard:
+            max_distance = max([i.distance(j) for i in self.nodes for j in self.nodes])
+            max_reward = max([i.reward for i in self.nodes])
+
         while sum(end.values()) != len(end):
             for v in range(self.max_vehicles):
                 if end[v]:
@@ -120,8 +129,8 @@ class StaticConstructive:
                     if dist[v] + edge_depot_b.distance + edge_a_b.distance > self.max_dist:
                         continue
 
-                    saving_distance = self.alpha * edge_a_b.distance
-                    saving_reward = (1 - self.alpha) * self.nodes[j + 1].reward
+                    saving_distance = self.alpha * edge_a_b.distance/max_distance
+                    saving_reward = (1 - self.alpha) * self.nodes[j + 1].reward/max_reward
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
                                                edge_a_b.distance))

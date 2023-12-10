@@ -43,6 +43,7 @@ class Algorithm:
     DYNAMIC = "DYNAMIC"
     CONSTRUCTIVE_DYNAMIC = "CONSTRUCTIVE_DYNAMIC"
     CONSTRUCTIVE_STATIC = "CONSTRUCTIVE_STATIC"
+    CONSTRUCTIVE_DYNAMIC_BB = "CONSTRUCTIVE_DYNAMIC_BB"
     SELECT_SAVING_GREEDY = "GREEDY"
     SELECT_SAVING_GRASP = "GRASP"
 
@@ -68,6 +69,7 @@ class Key:
     MAX_TIME = "max_time"
     INSTANCE = "instance"
     BETA_BLACKBOX = "beta"
+    STANDARD = "standard"
 
     ALGORITHM = "algorithm"
     SELECTED_NODE_FUNCTION = "selected_random_node"

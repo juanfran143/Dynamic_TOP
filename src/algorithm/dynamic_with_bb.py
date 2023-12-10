@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, log_loss, roc_auc_score, roc_curve
 
 
-class DynamicConstructive:
+class DynamicConstructiveBB:
     """
     Clase que ejecutará el algoritmo statico, es decir, el que no tiene en cuenta
     el dinamismo del problema. Habrá una función statica que es la que se tendrá
@@ -115,16 +115,13 @@ class DynamicConstructive:
                         continue
 
                     node_type_b = self.dict_of_types[self.nodes[j + 1].id]
-                    array_b = np.array((self.weather, self.congestion[self.nodes[j + 1].id],
-                                        (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2)))
-                    ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
-                    """
-                    bb_sim_b = self.bb.get_value(node_type_b,  self.weather, self.congestion[self.nodes[j + 1].id], 
+
+                    bb_sim_b = self.bb.get_value(node_type_b,  self.weather, self.congestion[self.nodes[j + 1].id],
                                                  (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2))
                     saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * bb_sim_b)
-                    """
+
                     saving_distance = self.alpha * edge_a_b.distance/max_distance
-                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * ts_sim_b[0])
+                    # saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * ts_sim_b[0])
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
                                                edge_a_b.distance))
@@ -214,14 +211,14 @@ class DynamicConstructive:
 
         print(f"MSE: {mse}; RMSE: {rmse}; MAE: {mae}")
 
-    def run_dynamic(self):
+    def run_dynamic_bb(self):
         of_dynamic_list, of_list, route_list = [], [], []
         for _ in range(self.max_iter_dynamic):
             of_dynamic_list.append(self.constructive_dynamic_solution())
             of_list.append(sum([self.routes[i].reward for i in range(self.max_vehicles)]))
             route_list.append(copy.deepcopy(self.routes))
-            self.fit_wb()
+            # self.fit_wb()
             self.change_seed()
-        self.check_wb()
+        # self.check_wb()
 
         return route_list, of_list, of_dynamic_list

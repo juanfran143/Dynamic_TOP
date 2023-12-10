@@ -49,7 +49,8 @@ def read_run(name="run.txt"):
                 Key.ALPHA: float(parts[8]),
                 Key.PERCENTAGE: float(parts[9]),
                 Key.N_TYPE_NODES: int(parts[10]),
-                Key.BETA_BIAS: float(parts[11])
+                Key.BETA_BIAS: float(parts[11]),
+                Key.STANDARD: bool(parts[12])
             })
 
     return data_dict
