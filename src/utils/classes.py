@@ -123,13 +123,6 @@ class BlackBox:
 
         return 1 / (1 + math.exp(-exponent))
 
-    def get_value_with_list(self, node_type, list_of_data):
-        weather_value = self.beta_1[node_type] * list_of_data[self.n - 2]
-        congestion_value = self.beta_2[node_type] * list_of_data[self.n-1]
-        battery_value = self.beta_3[node_type] * list_of_data[self.n]
-        exponent = self.beta_0[node_type] + weather_value + battery_value + congestion_value
-
-        return 1 / (1 + math.exp(-exponent))
 
     def simulate(self, node_type, weather=0, congestion=0, battery=0, verbose=False):
         rand = random.random()

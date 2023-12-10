@@ -6,6 +6,7 @@ import random
 
 
 # This is the blackbox class, bandidts = types
+"""
 class ContextualMAB:
 
 #!!!! INTERCEpT ==0 !!!!
@@ -54,7 +55,7 @@ class ContextualMAB:
 
         # give reward according to probability
         return [1 - prob_dict[k], prob_dict[k]]
-
+"""
 
 class OnlineLogisticRegression:
 
