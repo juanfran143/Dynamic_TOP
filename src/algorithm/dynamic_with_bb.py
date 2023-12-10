@@ -120,7 +120,7 @@ class DynamicConstructiveBB:
                                                  (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2))
                     saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * bb_sim_b)
 
-                    saving_distance = self.alpha * edge_a_b.distance/max_distance
+                    saving_distance = self.alpha * (1 - edge_a_b.distance/max_distance)
                     # saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * ts_sim_b[0])
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
@@ -129,7 +129,7 @@ class DynamicConstructiveBB:
                 if len(self.savings) == 0:
                     end[v] = True
                 else:
-                    self.savings.sort(key=lambda x: x.saving)
+                    self.savings.sort(key=lambda x: x.saving, reverse=True)
 
                 if len(self.savings) != 0:
                     self.routes[v].append(self.savings[0].end)
@@ -147,6 +147,8 @@ class DynamicConstructiveBB:
                     # print(weather,congestion,battery)
                     has_reward = self.bb.simulate(node_type=node_type, weather=weather,
                                                   congestion=congestion, battery=battery, verbose=False)
+                    a_test = self.bb.get_value(node_type=node_type, weather=weather,
+                                                  congestion=congestion, battery=battery)
                     new_row = np.array([weather, congestion, battery, has_reward])
                     self.new_data[node_type].append(new_row)
                     dynamic_reward[v] += self.savings[0].end.reward * has_reward

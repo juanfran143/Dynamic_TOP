@@ -25,7 +25,7 @@ def neighbour(nodes, percentage):
 def create_instance(instance_dict):
     instance_dict[Key.NODES], instance_dict[Key.MAX_DIST], instance_dict[Key.MAX_VEHICLES] = (
         read(instance_dict[Key.INSTANCE]))
-    beta0, beta1, beta2, beta3 = Betas().MEDIUMTEST
+    beta0, beta1, beta2, beta3 = getattr(Betas, instance_dict["beta"])
     instance_dict[Key.BLACKBOX] = BlackBox()
     instance_dict[Key.BLACKBOX].setter_betas(beta0, beta1, beta2, beta3)
     instance_dict[Key.NEIGHBOUR_LIMIT] = neighbour(instance_dict[Key.NODES], instance_dict[Key.PERCENTAGE])

@@ -123,7 +123,7 @@ class DynamicConstructive:
                                                  (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2))
                     saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * bb_sim_b)
                     """
-                    saving_distance = self.alpha * edge_a_b.distance/max_distance
+                    saving_distance = self.alpha * (1-edge_a_b.distance/max_distance)
                     saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * ts_sim_b[0])
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
@@ -132,7 +132,7 @@ class DynamicConstructive:
                 if len(self.savings) == 0:
                     end[v] = True
                 else:
-                    self.savings.sort(key=lambda x: x.saving)
+                    self.savings.sort(key=lambda x: x.saving, reverse=True)
 
                 if len(self.savings) != 0:
                     self.routes[v].append(self.savings[0].end)
@@ -199,11 +199,13 @@ class DynamicConstructive:
                         node_type_b = self.dict_of_types[self.nodes[j + 1].id]
                         array_b = np.array((weather, congestion, battery / 10))
                         ts_value = round(self.ts[node_type_b].predict_proba(array_b, 'sample')[0], 2)
-                        bb_value = self.bb.simulate(node_type=node_type_b, weather=weather,
-                                                    congestion=congestion, battery=battery, verbose=False)
+                        #bb_value = self.bb.simulate(node_type=node_type_b, weather=weather,
+                        #                            congestion=congestion, battery=battery, verbose=False)
+                        bb_value = self.bb.get_value(node_type=node_type_b, weather=weather,
+                                                    congestion=congestion, battery=battery)
                         ts.append(ts_value)
                         bb.append(bb_value)
-                        dic[(weather, congestion, battery / 10)] = (ts_value, bb_value)
+                        dic[(j,weather, congestion, battery / 10)] = (ts_value, bb_value)
 
         # Cálculo de MSE, RMSE, MAE y Log-Loss
         mse = mean_squared_error(ts, bb)
@@ -222,6 +224,6 @@ class DynamicConstructive:
             route_list.append(copy.deepcopy(self.routes))
             self.fit_wb()
             self.change_seed()
-        self.check_wb()
+        #self.check_wb()
 
         return route_list, of_list, of_dynamic_list

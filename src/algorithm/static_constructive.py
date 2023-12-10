@@ -129,7 +129,7 @@ class StaticConstructive:
                     if dist[v] + edge_depot_b.distance + edge_a_b.distance > self.max_dist:
                         continue
 
-                    saving_distance = self.alpha * edge_a_b.distance/max_distance
+                    saving_distance = self.alpha * (1-edge_a_b.distance/max_distance)
                     saving_reward = (1 - self.alpha) * self.nodes[j + 1].reward/max_reward
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
@@ -138,7 +138,7 @@ class StaticConstructive:
                 if len(self.savings) == 0:
                     end[v] = True
                 else:
-                    self.savings.sort(key=lambda x: x.saving)
+                    self.savings.sort(key=lambda x: x.saving, reverse=True)
 
                 if len(self.savings) != 0:
                     saving = self.select_saving_function()

@@ -136,7 +136,7 @@ class BlackBox:
         if verbose:
             print("La probabilidad de la black box ha sido: " + str(self.get_value(node_type, weather, congestion, battery)))
 
-        if rand < self.get_value(node_type,  weather, congestion, battery):
+        if rand > self.get_value(node_type,  weather, congestion, battery):
             if verbose:
                 print("Se pierde el reward del nodo")
             return 0
