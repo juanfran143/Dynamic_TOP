@@ -273,7 +273,7 @@ class Static:
         return self.routes[:min(self.max_vehicles, len(self.routes))], self.of, dynamic_of
 
     def change_seed(self):
-        self.seed += random.randint(1000, 10000)
+        self.seed += 10000
         random.seed = self.seed
         np.seed = self.seed
 

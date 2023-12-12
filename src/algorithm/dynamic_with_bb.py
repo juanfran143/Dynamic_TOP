@@ -183,7 +183,7 @@ class DynamicConstructiveBB:
                 self.ts[i].fit(x, y)
 
     def change_seed(self):
-        self.seed += random.randint(1000, 10000)
+        self.seed += 10000
         random.seed = self.seed
         np.seed = self.seed
 

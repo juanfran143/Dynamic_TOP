@@ -35,9 +35,9 @@ class DynamicConstructive:
         self.of = 0
 
         self.standard = standard
+        self.seed_route = seed
         self.seed = seed
-        random.seed = seed
-        np.seed = seed
+        np.random.seed(seed)
 
         self.nodes = nodes
         self.savings = []
@@ -48,9 +48,8 @@ class DynamicConstructive:
 
         self.n_types_nodes = n_types_nodes
 
-        random.seed = self.seed
-        self.weather = random.choice([-1, 1])
-        self.congestion = {i: random.choice([-1, 1]) for i in range(len(nodes))}
+        self.weather = np.random.choice([-1, 1])
+        self.congestion = {i: np.random.choice([-1, 1]) for i in range(len(nodes))}
         self.bb = bb
         self.ts = wb
         self.new_data = {i: [] for i in range(n_types_nodes)}
@@ -117,6 +116,7 @@ class DynamicConstructive:
                     node_type_b = self.dict_of_types[self.nodes[j + 1].id]
                     array_b = np.array((self.weather, self.congestion[self.nodes[j + 1].id],
                                         (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2)))
+
                     ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
                     """
                     bb_sim_b = self.bb.get_value(node_type_b,  self.weather, self.congestion[self.nodes[j + 1].id], 
@@ -148,16 +148,20 @@ class DynamicConstructive:
                     # transformed into (-1,1)
                     battery = ((1 - dist[v] / self.max_dist) - 0.5) * 2
                     # print(weather,congestion,battery)
+
                     has_reward = self.bb.simulate(node_type=node_type, weather=weather,
                                                   congestion=congestion, battery=battery, verbose=False)
+
                     new_row = np.array([weather, congestion, battery, has_reward])
                     self.new_data[node_type].append(new_row)
                     dynamic_reward[v] += self.savings[0].end.reward * has_reward
+                    self.change_environment()
+
                 else:
                     last = Edge(self.routes[v][-1], self.nodes[-1])
                     self.routes[v].append(self.nodes[-1])
                     dist[v] += last.distance
-                self.change_environment()
+
 
         routes = []
         for k, v in self.routes.items():
@@ -170,10 +174,10 @@ class DynamicConstructive:
         return sum(dynamic_reward[v] for v in range(self.max_vehicles))
 
     def change_environment(self):
-        random.seed = self.seed
-        self.seed += 1
-        self.weather = random.choice([-1, 1])
-        self.congestion = {i: random.choice([-1, 1]) for i in range(len(self.nodes))}
+        self.seed_route += 1
+        np.random.seed(self.seed_route)
+        self.weather = np.random.choice([-1, 1])
+        self.congestion = {i: np.random.choice([-1, 1]) for i in range(len(self.nodes))}
 
     def fit_wb(self):
         for i in range(self.n_types_nodes):
@@ -184,9 +188,9 @@ class DynamicConstructive:
                 self.ts[i].fit(x, y)
 
     def change_seed(self):
-        self.seed += random.randint(1000, 10000)
-        random.seed = self.seed
-        np.seed = self.seed
+        self.seed += 10000
+        self.seed_route = self.seed + 1
+        np.random.seed(self.seed)
 
     def check_wb(self):
         ts = []
@@ -199,8 +203,7 @@ class DynamicConstructive:
                         node_type_b = j
                         array_b = np.array((weather, congestion, battery / 10))
                         ts_value = round(self.ts[node_type_b].predict_proba(array_b, 'sample')[1], 2)
-                        #bb_value = self.bb.simulate(node_type=node_type_b, weather=weather,
-                        #                            congestion=congestion, battery=battery, verbose=False)
+
                         bb_value = self.bb.get_value(node_type=node_type_b, weather=weather,
                                                     congestion=congestion, battery=battery)
                         ts.append(ts_value)
