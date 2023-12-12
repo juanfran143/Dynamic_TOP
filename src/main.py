@@ -37,7 +37,7 @@ def create_instance(instance_dict):
     return Solution(**filtered_args), instance_dict
 
 
-def save_reduced_information_to_txt(info, mean_of, mean_dynamic_of, time, filename="..\\output\\output.txt"):
+def save_reduced_information_to_txt(info, mean_of, mean_dynamic_of, std_dynamic_of, max_dynamic_of, min_dynamic_of, time, filename="..\\output\\output.txt"):
     """
     Saves reduced information along with additional mean values to a text file, excluding certain keys.
 
@@ -56,6 +56,10 @@ def save_reduced_information_to_txt(info, mean_of, mean_dynamic_of, time, filena
     reduced_info['time'] = time
     reduced_info['mean_of'] = mean_of
     reduced_info['mean_dynamic_of'] = mean_dynamic_of
+    reduced_info['std_dynamic_of'] = std_dynamic_of
+    reduced_info['max_dynamic_of'] = max_dynamic_of
+    reduced_info['min_dynamic_of'] = min_dynamic_of
+
 
     values_to_save = [v for k, v in reduced_info.items()]
 
@@ -72,7 +76,8 @@ if __name__ == '__main__':
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
         start = time.time()
         results = solution.run(algo, selected_procedure, instance_dict)
-        save_reduced_information_to_txt(instance_dict, np.mean(results[1]), np.mean(results[2]), time.time()-start)
+        save_reduced_information_to_txt(instance_dict, np.mean(results[1]), np.mean(results[2]), np.std(results[2]),
+                                        np.min(results[2]), np.max(results[2]), time.time()-start)
 
         #maps = Map(instance_dict["nodes"])
         #maps.print_route(results[0][-1])
