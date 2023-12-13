@@ -125,7 +125,7 @@ class BlackBox:
 
 
     def simulate(self, node_type, weather=0, congestion=0, battery=0, verbose=False):
-        rand = random.random()
+        rand = np.random.random()
         if verbose:
             print("La probabilidad de la black box ha sido: " + str(self.get_value(node_type, weather, congestion, battery)))
 
@@ -141,7 +141,7 @@ class BlackBox:
     def simulate_list(self, list_of_data):
         output = []
         for lista in list_of_data:
-            rand = random.random()
+            rand = np.random.random()
             node_type, data = lista[0], lista[1:]
             if rand > self.get_value_with_list(node_type, data):
                 output.append(0)
@@ -164,7 +164,7 @@ class BlackBox:
     def simulate_dict(self, dict_of_data):
         output = []
         for list in dict_of_data:
-            rand = random.random()
+            rand = np.random.random()
             if rand > self.get_value_with_dict(list):
                 output.append(0)
             else:

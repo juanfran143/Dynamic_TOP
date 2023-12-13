@@ -1,8 +1,12 @@
 import copy
+
+import numpy.random
+
 from src.utils.classes import *
 import numpy as np
 from math import log
 from src.utils.Constants import Algorithm
+import random
 
 
 class StaticConstructive:
@@ -37,9 +41,10 @@ class StaticConstructive:
         self.of = 0
 
         self.standard = standard
+        self.seed_route = seed
         self.seed = seed
         random.seed = seed
-        np.seed = seed
+        np.random.seed(seed)
 
         self.nodes = nodes
         self.savings = []
@@ -51,9 +56,8 @@ class StaticConstructive:
 
         self.n_types_nodes = n_types_nodes
 
-        random.seed = self.seed
-        self.weather = random.choice([-1, 1])
-        self.congestion = {i: random.choice([-1, 1]) for i in range(len(nodes))}
+        self.weather = np.random.choice([-1, 1])
+        self.congestion = {i: np.random.choice([-1, 1]) for i in range(len(nodes))}
         self.bb = bb
         self.new_data = {i: [] for i in range(n_types_nodes)}
         self.max_iter_dynamic = max_iter_dynamic
@@ -260,15 +264,15 @@ class StaticConstructive:
                     route.edges.append(return_home)
 
     def change_environment(self):
-        random.seed = self.seed
-        self.seed += 1
-        self.weather = random.choice([-1, 1])
-        self.congestion = {i: random.choice([-1, 1])for i in range(len(self.nodes))}
+        self.seed_route += 1
+        np.random.seed(self.seed_route)
+        self.weather = np.random.choice([-1, 1])
+        self.congestion = {i: np.random.choice([-1, 1]) for i in range(len(self.nodes))}
 
     def change_seed(self):
         self.seed += 10000
-        random.seed = self.seed
-        np.seed = self.seed
+        self.seed_route = self.seed + 1
+        np.random.seed(self.seed)
 
     def dynamic_of(self):
         dynamic_of = 0
@@ -276,6 +280,7 @@ class StaticConstructive:
             distance = 0
             for e in r.edges[:-1]:
                 distance += e.distance
+
                 has_reward = self.bb.simulate(self.dict_of_types[e.end.id], distance / self.max_dist, self.weather,
                                               self.congestion[e.end.id])
                 dynamic_of += e.end.reward * has_reward
