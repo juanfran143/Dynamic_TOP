@@ -73,6 +73,7 @@ class OnlineLogisticRegression:
 
         # initializing weights
         self.w = np.random.normal(self.m, self.alpha * self.q ** (-1.0), size=self.n_dim)
+        #self.w = np.random.normal(self.m, self.alpha * 0, size=self.n_dim)
 
     # the loss function
     def loss(self, w, *args):
@@ -122,38 +123,3 @@ class OnlineLogisticRegression:
         # calculating probabilities
         proba = 1 / (1 + np.exp(-1 * x.dot(w)))
         return np.array([1 - proba, proba]).T
-
-
-if __name__ == "__main__":
-
-    # instance of our class
-    np.random.seed(123)
-    #cmab3 is blackbox
-    cmab3 = ContextualMAB()
-
-    #These are the 3 variables, if the range is positive, BAD
-    x1 = np.random.choice([-1, +1], size=1000)
-    x2 = np.random.choice([-1, +1], size=1000)
-    x3 = np.random.uniform(-1, 1, 1000)
-    x = np_combined_array = np.column_stack((x1, x2, x3))
-    # cmb3.draw is to simulate in blacbox
-    y = np.array([cmab3.draw(0, x[i])[0] for i in range(0, len(x1))])
-
-
-    # OLR object
-    online_lrn3 = OnlineLogisticRegression(0.5, 1, 3)
-    x_res = x.reshape(-3, 3)
-    #start = time.time()
-    online_lrn3.fit(x_res, y)
-    #end = time.time()
-    #print(end - start)
-
-    # Now test the capacity of prediction with a sample of 10
-
-    x1 = np.random.choice([-1, 1], size=10)
-    x2 = np.random.choice([-1, 1], size=10)
-    x3 = np.random.uniform(-1, 1, 10)
-    x = np_combined_array = np.column_stack((x1, x2, x3))
-    yprueba = np.array([cmab3.prob(0, x[i]) for i in range(0, len(x1))])
-    print(yprueba)
-    print(online_lrn3.predict_proba(x,"sample"))

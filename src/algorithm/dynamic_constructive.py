@@ -2,6 +2,7 @@ import copy
 from src.utils.classes import *
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, log_loss, roc_auc_score, roc_curve
+from math import log
 
 
 class DynamicConstructive:
@@ -30,9 +31,10 @@ class DynamicConstructive:
     """
 
     def __init__(self, nodes, max_dist, seed=0, max_vehicles=1, alpha=0.7, neighbour_limit=-1, bb=None, wb=None,
-                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, standard=True):
+                 dict_of_types=None, n_types_nodes=2, max_iter_dynamic=100, beta=0.7, standard=True):
         self.routes = []
         self.of = 0
+        self.beta = beta
 
         self.standard = standard
         self.seed_route = seed
@@ -118,13 +120,18 @@ class DynamicConstructive:
                                         (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2)))
 
                     ts_sim_b = self.ts[node_type_b].predict_proba(array_b, 'sample')
+                    prob_node = ts_sim_b[1]
                     """
                     bb_sim_b = self.bb.get_value(node_type_b,  self.weather, self.congestion[self.nodes[j + 1].id], 
                                                  (((1 - (dist[v] + edge_a_b.distance) / self.max_dist) - 0.5) * 2))
                     saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * bb_sim_b)
                     """
                     saving_distance = self.alpha * (1-edge_a_b.distance/max_distance)
-                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * ts_sim_b[1])
+
+                    saving_reward = (1 - self.alpha) * (self.nodes[j + 1].reward/max_reward * prob_node)
+
+                   #if (prob_node < 0.25):
+                   #  saving_reward -= 1
 
                     self.savings.append(Saving(start_node, self.nodes[j + 1], saving_distance + saving_reward,
                                                edge_a_b.distance))
@@ -135,8 +142,10 @@ class DynamicConstructive:
                     self.savings.sort(key=lambda x: x.saving, reverse=True)
 
                 if len(self.savings) != 0:
-                    self.routes[v].append(self.savings[0].end)
-                    nodes_used.append(self.savings[0].end.id)
+                    # Changed to BIAS
+                    index = int((log(np.random.random()) / log(1 - self.beta))) % len(self.savings)
+                    self.routes[v].append(self.savings[index].end)
+                    nodes_used.append(self.savings[index].end.id)
 
                     reward[v] += self.savings[0].end.reward
                     dist[v] += self.savings[0].a_to_b
@@ -205,7 +214,7 @@ class DynamicConstructive:
                         ts_value = round(self.ts[node_type_b].predict_proba(array_b, 'sample')[1], 2)
 
                         bb_value = self.bb.get_value(node_type=node_type_b, weather=weather,
-                                                    congestion=congestion, battery=battery)
+                                                    congestion=congestion, battery=battery/10)
                         ts.append(ts_value)
                         bb.append(bb_value)
                         dic[(j, weather, congestion, battery / 10)] = (ts_value, bb_value)
@@ -227,6 +236,6 @@ class DynamicConstructive:
             route_list.append(copy.deepcopy(self.routes))
             self.fit_wb()
             self.change_seed()
-        # self.check_wb()
+        self.check_wb()
 
         return route_list, of_list, of_dynamic_list

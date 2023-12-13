@@ -79,8 +79,8 @@ if __name__ == '__main__':
         save_reduced_information_to_txt(instance_dict, np.mean(results[1]), np.mean(results[2]), np.std(results[2]),
                                         np.min(results[2]), np.max(results[2]), time.time()-start)
 
-        # maps = Map(instance_dict["nodes"])
-        # maps.print_route(results[0][-1])
+        maps = Map(instance_dict["nodes"])
+        maps.print_route(results[0][-1])
 
         print(instance_dict[Key.ALGORITHM])
         print("Mean OF: " + str(np.mean(results[1])))
