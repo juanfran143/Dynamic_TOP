@@ -53,7 +53,10 @@ class Map:
             else:
                 circle = plt.Circle((node.x, node.y), 0.5, color='blue', fill=False)
             ax.add_patch(circle)
-            ax.annotate(int(node.id), (node.x, node.y), color='red', ha='center', va='center')
+            #ax.annotate(int(node.id), (node.x, node.y), color='red', ha='center', va='center')
+            #ax.annotate(int(node.id)%5, (node.x, node.y), color='red', ha='center', va='center')
+            ax.annotate(int(node.reward), (node.x, node.y), color='red', ha='center', va='center')
+
 
         for team in route:
             for edge in team.edges:

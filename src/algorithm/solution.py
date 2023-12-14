@@ -56,7 +56,7 @@ class Solution:
             return s.run_multi_scenarios_static(self.max_iter_random)
 
         if algo == Algorithm.DYNAMIC:
-            ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
+            ts = {k: OnlineLogisticRegression(0.5, 2, 3) for k in range(instance[Key.N_TYPE_NODES])}
             s = Dynamic(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha, self.neighbour_limit,
                         self.bb, ts, self.dict_of_types, self.max_iter_dynamic,
                         select_saving_function=select_saving_function)
@@ -67,7 +67,7 @@ class Solution:
             ts = {k: OnlineLogisticRegression(0.5, 1, 3) for k in range(instance[Key.N_TYPE_NODES])}
             s = DynamicConstructive(self.nodes, self.max_dist, self.seed, self.max_vehicles, self.alpha,
                                     self.neighbour_limit, self.bb, ts, self.dict_of_types, instance[Key.N_TYPE_NODES],
-                                    self.max_iter_dynamic, self.standard)
+                                    self.max_iter_dynamic, beta=self.beta_bias, standard=self.standard)
 
             return s.run_dynamic()
 
