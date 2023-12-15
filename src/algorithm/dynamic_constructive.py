@@ -35,6 +35,7 @@ class DynamicConstructive:
         self.routes = []
         self.of = 0
         self.beta = beta
+        self.mseList = []
 
         self.standard = standard
         self.seed_route = seed
@@ -224,9 +225,11 @@ class DynamicConstructive:
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(ts, bb)
 
-        print(dic)
+        self.mseList.append(mse)
 
-        print(f"MSE: {mse}; RMSE: {rmse}; MAE: {mae}")
+        #print(dic)
+
+        #print(f"MSE: {mse}; RMSE: {rmse}; MAE: {mae}")
 
     def run_dynamic(self):
         of_dynamic_list, of_list, route_list = [], [], []
@@ -236,6 +239,13 @@ class DynamicConstructive:
             route_list.append(copy.deepcopy(self.routes))
             self.fit_wb()
             self.change_seed()
-        self.check_wb()
+            self.check_wb()
+        print(self.mseList)
+        import matplotlib.pyplot as plt
+
+        plt.plot(self.mseList)
+        plt.ylabel('MSE')
+        plt.xlabel('batches of data')
+        plt.show()
 
         return route_list, of_list, of_dynamic_list

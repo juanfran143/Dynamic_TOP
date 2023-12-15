@@ -1,0 +1,1 @@
+nombre del problema	Low/Medium/High	%relativo

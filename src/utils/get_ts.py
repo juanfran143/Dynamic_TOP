@@ -5,18 +5,19 @@ import matplotlib.pyplot as plt
 def logistic_function(x, betas):
     return 1 / (1 + np.exp(-np.dot(betas, x)))
 
+
 LOW = [
     {0: 0, 1: 0.0, 2: 0.0, 3: 0, 4: 0},
-    {0: 0, 1: -0.1, 2: -0.2, 3: -0.3, 4: -0.5},
-    {0: -1, 1: -0.8, 2: -0.6, 3: -0.4, 4: -0.1},
+    {0: 0, 1: -0.1, 2: -0.2, 3: -0.3, 4: -0.4},
+    {0: -1, 1: -0.8, 2: -0.6, 3: -0.4, 4: -0.2},
     {0: 1, 1: 1.1, 2: 1.2, 3: 1.3, 4: 1.4}
 ]
 
 MEDIUM = [
     {0: 0, 1: 0.0, 2: 0.0, 3: 0, 4: 0},
-    {0: 0, 1: -0.2, 2: -0.4, 3: -0.6, 4: -0.1},
-    {0: -1.2, 1: -1, 2: -0.8, 3: -0.6, 4: -0.2},
-    {0: 1.1, 1: 1.2, 2: 1.3, 3: 1.4, 4: 1.5}
+    {0: 0, 1: -0.2, 2: -0.4, 3: -0.6, 4: -0.8},
+    {0: -1.2, 1: -1, 2: -0.8, 3: -0.6, 4: -0.4},
+    {0: 1.2, 1: 1.4, 2: 1.6, 3: 1.8, 4: 2}
 ]
 
 HIGH = [
@@ -27,24 +28,17 @@ HIGH = [
 ]
 
 
-HIGHTEST = [
-    {0: 0, 1: 0.0, 2: 0.0, 3: 0, 4: 0},
-    [-8.9, -7.3, -6.9, -0.2, -0.05],
-    {0: -8.2, 1: -7.8, 2: -5.5, 3: -0.6, 4: -0.3},
-    {0: -8.5, 1: -7.5, 2: -5.2, 3: -0.5, 4: -0.2}
-]
-
 # Convertir los diccionarios en listas para facilitar el cálculo
-betas = [list(beta.values()) if isinstance(beta, dict) else beta for beta in HIGHTEST]
+betas = [list(beta.values()) if isinstance(beta, dict) else beta for beta in MEDIUM]
 
 # Nuevo rango para variar beta 1
 beta_3_range = np.linspace(-1, 1, 100)  # Variando de -1 a 1
 
 # Nuevos ajustes en la interpretación de los datos de betas
-beta_0 = list(HIGH[0].values())  # Beta 0 (intercept)
-beta_1 = list(HIGH[1].values())  # Beta 1
-beta_2 = list(HIGH[2].values())  # Beta 2
-beta_3 = list(HIGH[3].values())  # Beta 3
+beta_0 = list(MEDIUM[0].values())  # Beta 0 (intercept)
+beta_1 = list(MEDIUM[1].values())  # Beta 1
+beta_2 = list(MEDIUM[2].values())  # Beta 2
+beta_3 = list(MEDIUM[3].values())  # Beta 3
 
 # Preparación para la generación de gráficos
 fig, axs = plt.subplots(1, 5, figsize=(20, 4))  # 5 gráficos para 5 tipos de nodos
