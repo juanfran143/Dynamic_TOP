@@ -94,4 +94,38 @@ def generate_config():
                         file.write(
                             f"{i};{seed};{max_iter_dynamic};{max_time};{algorithm};{selected_random_node};{b};{max_iter_random};{alpha};{percentage};{n_type_nodes};{beta_bias};{standardize}\n")
 
-generate_config()
+# generate_config()
+def gap():
+    import pandas as pd
+
+    # Cargar el archivo en un DataFrame
+    file_path = '..\\..\\output\\output (1).txt'  # Asegúrate de cambiar 'tu_ruta_al_archivo' a la ruta donde tienes el archivo
+    df = pd.read_csv(file_path, sep=';')
+
+    # Seleccionar las columnas de interés: 1 (instancias), 5, 7, 18 y 19
+    selected_columns_df = df.iloc[:, [0, 4, 6, 17, 18]]
+
+    # Renombrar las columnas para facilitar el análisis
+    selected_columns_df.columns = ['Instance', 'Column5', 'Column7', 'Column18', 'Column19']
+
+    # Crear una tabla pivotante
+    pivot_df = selected_columns_df.pivot_table(values='Column19', index='Instance',
+                                               columns=['Column7', 'Column5'], aggfunc='mean')
+
+    # Calcular los gaps entre 'CONSTRUCTIVE_DYNAMIC' y 'CONSTRUCTIVE_STATIC' para cada valor de beta
+    gaps_dynamic_static_high = (pivot_df[('HIGH', 'CONSTRUCTIVE_DYNAMIC')] - pivot_df[('HIGH', 'CONSTRUCTIVE_STATIC')])/pivot_df[('HIGH', 'CONSTRUCTIVE_DYNAMIC')]*100
+    gaps_dynamic_static_low = (pivot_df[('LOW', 'CONSTRUCTIVE_DYNAMIC')] - pivot_df[('LOW', 'CONSTRUCTIVE_STATIC')])/pivot_df[('LOW', 'CONSTRUCTIVE_DYNAMIC')]*100
+    gaps_dynamic_static_medium = (pivot_df[('MEDIUM', 'CONSTRUCTIVE_DYNAMIC')] - pivot_df[('MEDIUM', 'CONSTRUCTIVE_STATIC')])/pivot_df[('MEDIUM', 'CONSTRUCTIVE_DYNAMIC')]*100
+
+    # Crear un DataFrame para los resultados
+    gaps_result_df = pd.DataFrame({
+        'Instance': pivot_df.index,
+        'Gap_LOW': round(gaps_dynamic_static_low, 2),
+        'Gap_MEDIUM': round(gaps_dynamic_static_medium, 2),
+        'Gap_HIGH': round(gaps_dynamic_static_high, 2)
+    }).reset_index(drop=True)
+
+    # Mostrar las primeras filas del DataFrame resultante
+    gaps_result_df.to_csv("Gap.csv", sep=";")
+
+gap()

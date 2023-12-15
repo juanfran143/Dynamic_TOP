@@ -97,8 +97,10 @@ class DynamicConstructive:
         if self.standard:
             # nodes que no están en la solution
             # max_reward: de los nodos NO seleccionados
-            max_distance = max([i.distance(j) for i in self.nodes for j in self.nodes])
-            max_reward = max([i.reward for i in self.nodes])
+
+            max_distance = max([i.distance(j) for i in self.nodes for j in self.nodes
+                                if i not in nodes_used and j not in nodes_used])
+            max_reward = max([i.reward for i in self.nodes if i not in nodes_used])
 
         while sum(end.values()) != len(end):
             for v in range(self.max_vehicles):

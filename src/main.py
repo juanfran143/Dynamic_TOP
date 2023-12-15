@@ -126,8 +126,8 @@ if __name__ == '__main__':
                                         np.min(results[2]), np.max(results[2]), time.time()-start,
                                         np.min(results[2][:100]), np.min(results[2][:10]))
 
-        maps = Map(instance_dict["nodes"])
-        maps.print_route(results[0][-1])
+        # maps = Map(instance_dict["nodes"])
+        # maps.print_route(results[0][-1])
 
         print(instance_dict[Key.ALGORITHM])
         print("Mean OF: " + str(np.mean(results[1])))
