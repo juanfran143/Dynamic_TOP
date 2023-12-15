@@ -99,7 +99,6 @@ class Map:
                     end_node = edge.end
                     plt.plot([start_node.x, end_node.x], [start_node.y, end_node.y], color='green')
 
-
             # Set axis labels and title
             ax.set_xlabel('X Coordinate')
             ax.set_ylabel('Y Coordinate')

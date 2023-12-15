@@ -39,7 +39,7 @@ def create_instance(instance_dict):
 
 def save_reduced_information_to_txt(info, mean_of, mean_dynamic_of, std_dynamic_of, max_dynamic_of,
                                     min_dynamic_of, time, min_dynamic_of_100, min_dynamic_of_10,
-                                    filename="..\\output\\output.txt"):
+                                    filename="output\\output.txt"):
     """
     Saves reduced information along with additional mean values to a text file, excluding certain keys.
 
@@ -113,7 +113,8 @@ if __name__ == '__main__':
         selected_procedure = instance_dict[Key.SELECTED_NODE_FUNCTION]
         instance_dict = calculate_delta(instance_dict)
         start = time.time()
-
+        print(instance_dict[Key.BETA_BIAS])
+        print(instance_dict[Key.ALPHA])
         list_arguments = [Key.NODES, Key.MAX_DIST, Key.SEED, Key.MAX_VEHICLES, Key.ALPHA, Key.NEIGHBOUR_LIMIT,
                           Key.BLACKBOX,
                           Key.DICT_OF_TYPE, Key.MAX_ITER_DYNAMIC, Key.MAX_ITER_RANDOM, Key.BETA_BIAS]

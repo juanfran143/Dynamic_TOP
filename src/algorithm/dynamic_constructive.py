@@ -95,6 +95,8 @@ class DynamicConstructive:
         max_distance = 1
         max_reward = 1
         if self.standard:
+            # nodes que no están en la solution
+            # max_reward: de los nodos NO seleccionados
             max_distance = max([i.distance(j) for i in self.nodes for j in self.nodes])
             max_reward = max([i.reward for i in self.nodes])
 
@@ -236,6 +238,6 @@ class DynamicConstructive:
             route_list.append(copy.deepcopy(self.routes))
             self.fit_wb()
             self.change_seed()
-        self.check_wb()
+        # self.check_wb()
 
         return route_list, of_list, of_dynamic_list
